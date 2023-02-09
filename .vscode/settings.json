@@ -1,0 +1,14 @@
+{
+    "cSpell.words": [
+        "Bezier",
+        "curr",
+        "Discretization",
+        "discretize",
+        "discretizes",
+        "lerp",
+        "nalgebra",
+        "Polyline",
+        "polylines"
+    ],
+    "svg.preview.background": "transparent"
+}
