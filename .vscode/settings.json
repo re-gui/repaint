@@ -10,7 +10,8 @@
         "lerp",
         "nalgebra",
         "Polyline",
-        "polylines"
+        "polylines",
+        "rasterization"
     ],
     "svg.preview.background": "transparent"
 }
