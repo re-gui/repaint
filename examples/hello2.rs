@@ -37,20 +37,49 @@ fn main() {
             sweep_flag: false,
             end_pt_offset: Vec2f::new(20.0, 0.0),
         },
+        pc::ClosePath,
+        pc::MoveTo(Vec2f::new(50.0, 50.0)),
+        pc::EllipticalArcToOffset {
+            radii: Vec2f::new(10.0, 10.0),
+            x_axis_rotation: 0.0,
+            large_arc_flag: false,
+            sweep_flag: false,
+            end_pt_offset: Vec2f::new(20.0, 0.0)
+        },
+        pc::EllipticalArcToOffset {
+            radii: Vec2f::new(10.0, 10.0),
+            x_axis_rotation: 0.0,
+            large_arc_flag: false,
+            sweep_flag: false,
+            end_pt_offset: Vec2f::new(-20.0, 0.0)
+        },
+        pc::MoveTo(Vec2f::new(50.0, 20.0)),
+        pc::QuadraticBezierCurveToOffset {
+            control_pt_offset: Vec2f::new(0.0, 10.0),
+            end_pt_offset: Vec2f::new(20.0, 0.0)
+        },
+        pc::SmoothCubicBezierCurveToOffset {
+            control_pt_2_offset: Vec2f::new(0.0, 10.0),
+            end_pt_offset: Vec2f::new(20.0, 0.0)
+        }
     ];
-    let params = pp::discretization::DiscretizationParams {
-        tolerance: 0.25,
-        max_angle: 1.1,
-        aoi: None,
-        transform: pp::discretization::DiscretizationTransform::Identity,
-    };
+    let mut params = pp::discretization::DiscretizationParams::default();
+    params.tolerance = 1.5;
+    params.max_angle = 1.1;
+    let discretizer = pp::discretization::PathDiscretizer::new(
+        params,
+        pp::discretization::DiscretizationTransform::Identity,
+    );
     let mut it = path.iter();
-    let discr_commands_iter = pp::discretization::PathDiscretizer::new(&mut it, &params);
+    let discr_commands_iter = discretizer.discretize(&mut it);
 
     let mut svg = String::new();
     svg.push_str(&format!(r#"<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">"#));
     {
+        let possible_colors = ["red", "green", "blue", "yellow", "orange", "purple", "pink", "brown", "black", "white"];
+        let mut color_counter = 0;
         let mut points: Vec<Vec2f> = Vec::new();
+        let mut count = 0;
         let mut flush = |points: &mut Vec<Vec2f>| {
             if points.len() > 1 {
                 svg.push_str(&format!(r#"<polyline points=""#));
@@ -58,7 +87,8 @@ fn main() {
                     let pt = points[i];
                     svg.push_str(&format!(r#"{} {} "#, pt.x, pt.y));
                 }
-                svg.push_str(&format!(r#"" stroke="black" fill="none" />"#));
+                svg.push_str(&format!(r#"" stroke="{}" fill="none" />"#, possible_colors[color_counter]));
+                color_counter = (color_counter + 1) % possible_colors.len();
             }
             points.clear();
         };
@@ -67,13 +97,17 @@ fn main() {
                 pl::BrokenPolylineCommand::MoveTo(pt) => {
                     flush(&mut points);
                     points.push(pt);
+                    count += 1;
                 },
                 pl::BrokenPolylineCommand::LineTo(pt) => {
                     points.push(pt);
+                    count += 1;
                 },
             }
         }
         flush(&mut points);
+
+        println!("count: {}", count);
     }
     svg.push_str(&format!(r#"</svg>"#));
     std::fs::write(out_file2.clone(), svg).unwrap();

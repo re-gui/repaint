@@ -411,8 +411,9 @@ pub mod discretization {
     const DT_TOL: f32 = 1e-3; // TODO use
     // TODO rename in *_DT in *_STEP ?
 
+    #[derive(Clone, Copy, Debug)]
     /// This struct contains the parameters for the discretization of a curve.
-    pub struct DiscretizationParams<'a> {
+    pub struct DiscretizationParams {
         // maximum number of subdivisions for each piece of the curve
         //max_subdivisions: i32,
 
@@ -424,11 +425,20 @@ pub mod discretization {
 
         /// area of interest, if the curve is outside of this area, it will not be subdivided
         pub aoi: Option<FRect>,
-
-        /// transform to apply to the curve
-        pub transform: DiscretizationTransform<'a>,
     }
 
+    impl Default for DiscretizationParams {
+        fn default() -> Self {
+            Self {
+                //max_subdivisions: 100,
+                tolerance: 0.1,
+                max_angle: 0.1,
+                aoi: None,
+            }
+        }
+    }
+
+    #[derive(Clone, Copy)]
     /// This enum represents the transform to apply to the curve before discretizing it.
     pub enum DiscretizationTransform<'a> {
         /// The identity transform
@@ -478,27 +488,39 @@ pub mod discretization {
         }
     }
 
-    /// Discretizes a path
-    pub struct PathDiscretizer<'a, 'c> {
-        /// The path to discretize.
-        path: &'c mut dyn Iterator<Item = &'c PathCommand>,
+    pub struct PathDiscretizer<'t> {
         /// The discretization parameters.
-        params: &'a DiscretizationParams<'a>,
-        /// The current state of the discretization.
-        state: PathDiscretizationState<'a>,
+        params: DiscretizationParams,
+        /// transform to apply to the curve
+        transform: DiscretizationTransform<'t>,
     }
 
-    impl<'a, 'c> PathDiscretizer<'a, 'c> {
-        pub fn new(path: &'c mut dyn Iterator<Item = &'c PathCommand>, params: &'a DiscretizationParams<'a>) -> Self {
+    impl<'t> PathDiscretizer<'t> {
+        pub fn new(params: DiscretizationParams, transform: DiscretizationTransform<'t>) -> Self {
             Self {
-                path,
                 params,
+                transform,
+            }
+        }
+        pub fn discretize<'i, 'a>(&'a self, path: &'i mut dyn Iterator<Item = &'i PathCommand>) -> PathDiscretizerIterator<'i, 't, 'a> {
+            PathDiscretizerIterator{
+                discretizer: self,
+                path,
                 state: PathDiscretizationState::new(),
             }
         }
     }
 
-    impl<'a, 'c> Iterator for PathDiscretizer<'a, 'c> {
+    /// Discretizes a path
+    pub struct PathDiscretizerIterator<'i: 'a, 't: 'a, 'a> {
+        discretizer: &'a PathDiscretizer<'t>,
+        /// The path to discretize.
+        path: &'i mut dyn Iterator<Item = &'i PathCommand>,
+        /// The current state of the discretization.
+        state: PathDiscretizationState<'a>,
+    }
+
+    impl<'i, 't, 'here> Iterator for PathDiscretizerIterator<'i, 't, 'here> {
         type Item = BrokenPolylineCommand;
 
         fn next(&mut self) -> Option<Self::Item> {
@@ -528,10 +550,11 @@ pub mod discretization {
                     }
                     PathCommand::LineTo(pt) => {
                         let it = curves::discretize_segment(
-                            &self.state.current_position,
-                            pt,
+                            self.state.current_position,
+                            *pt,
                             true,
-                            &self.params
+                            &self.discretizer.params,
+                            &self.discretizer.transform
                         );
                         self.state.set_curr_pos_no_ctrl_pt(&pt);
                         self.state.subpath_iterator = Some(it);
@@ -540,10 +563,11 @@ pub mod discretization {
                     PathCommand::LineToOffset(offset) => {
                         let pt = self.state.current_position + offset;
                         let it = curves::discretize_segment(
-                            &self.state.current_position,
-                            &pt,
+                            self.state.current_position,
+                            pt,
                             true,
-                            &self.params
+                            &self.discretizer.params,
+                            &self.discretizer.transform
                         );
                         self.state.set_curr_pos_no_ctrl_pt(&pt);
                         self.state.subpath_iterator = Some(it);
@@ -552,10 +576,11 @@ pub mod discretization {
                     PathCommand::HorizontalLineTo(x) => {
                         let pt = Vec2f::new(*x, self.state.current_position.y);
                         let it = curves::discretize_segment(
-                            &self.state.current_position,
-                            &pt,
+                            self.state.current_position,
+                            pt,
                             true,
-                            &self.params
+                            &self.discretizer.params,
+                            &self.discretizer.transform
                         );
                         self.state.set_curr_pos_no_ctrl_pt(&pt);
                         self.state.subpath_iterator = Some(it);
@@ -564,10 +589,11 @@ pub mod discretization {
                     PathCommand::HorizontalLineToOffset(offset) => {
                         let pt = Vec2f::new(self.state.current_position.x + offset, self.state.current_position.y);
                         let it = curves::discretize_segment(
-                            &self.state.current_position,
-                            &pt,
+                            self.state.current_position,
+                            pt,
                             true,
-                            &self.params
+                            &self.discretizer.params,
+                            &self.discretizer.transform
                         );
                         self.state.set_curr_pos_no_ctrl_pt(&pt);
                         self.state.subpath_iterator = Some(it);
@@ -576,10 +602,11 @@ pub mod discretization {
                     PathCommand::VerticalLineTo(y) => {
                         let pt = Vec2f::new(self.state.current_position.x, *y);
                         let it = curves::discretize_segment(
-                            &self.state.current_position,
-                            &pt,
+                            self.state.current_position,
+                            pt,
                             true,
-                            &self.params
+                            &self.discretizer.params,
+                            &self.discretizer.transform
                         );
                         self.state.set_curr_pos_no_ctrl_pt(&pt);
                         self.state.subpath_iterator = Some(it);
@@ -588,10 +615,11 @@ pub mod discretization {
                     PathCommand::VerticalLineToOffset(offset) => {
                         let pt = Vec2f::new(self.state.current_position.x, self.state.current_position.y + offset);
                         let it = curves::discretize_segment(
-                            &self.state.current_position,
-                            &pt,
+                            self.state.current_position,
+                            pt,
                             true,
-                            &self.params
+                            &self.discretizer.params,
+                            &self.discretizer.transform
                         );
                         self.state.set_curr_pos_no_ctrl_pt(&pt);
                         self.state.subpath_iterator = Some(it);
@@ -614,7 +642,15 @@ pub mod discretization {
                         control_pt_2,
                         end_pt
                     } => {
-                        let discretizer = curves::discretize_cubic_bezier(&self.state.current_position, control_pt_1, control_pt_2, end_pt, true, &self.params);
+                        let discretizer = curves::discretize_cubic_bezier(
+                            self.state.current_position,
+                            *control_pt_1,
+                            *control_pt_2,
+                            *end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
                         self.state.set_current_pos_and_ctrl_pt(&end_pt, &control_pt_2);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
@@ -627,7 +663,15 @@ pub mod discretization {
                         let control_pt_1 = self.state.current_position + control_pt_1_offset;
                         let control_pt_2 = self.state.current_position + control_pt_2_offset;
                         let end_pt = self.state.current_position + end_pt_offset;
-                        let discretizer = curves::discretize_cubic_bezier(&self.state.current_position, &control_pt_1, &control_pt_2, &end_pt, true, &self.params);
+                        let discretizer = curves::discretize_cubic_bezier(
+                            self.state.current_position,
+                            control_pt_1,
+                            control_pt_2,
+                            end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
                         self.state.set_current_pos_and_ctrl_pt(&end_pt, &control_pt_2);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
@@ -637,7 +681,15 @@ pub mod discretization {
                         end_pt
                     } => {
                         let control_pt_1 = self.state.current_position + (self.state.current_position - self.state.current_control_point);
-                        let discretizer = curves::discretize_cubic_bezier(&self.state.current_position, &control_pt_1, control_pt_2, end_pt, true, &self.params);
+                        let discretizer = curves::discretize_cubic_bezier(
+                            self.state.current_position,
+                            control_pt_1,
+                            *control_pt_2,
+                            *end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
                         self.state.set_current_pos_and_ctrl_pt(&end_pt, &control_pt_2);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
@@ -649,7 +701,15 @@ pub mod discretization {
                         let control_pt_1 = self.state.current_position + (self.state.current_position - self.state.current_control_point);
                         let control_pt_2 = self.state.current_position + control_pt_2_offset;
                         let end_pt = self.state.current_position + end_pt_offset;
-                        let discretizer = curves::discretize_cubic_bezier(&self.state.current_position, &control_pt_1, &control_pt_2, &end_pt, true, &self.params);
+                        let discretizer = curves::discretize_cubic_bezier(
+                            self.state.current_position,
+                            control_pt_1,
+                            control_pt_2,
+                            end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
                         self.state.set_current_pos_and_ctrl_pt(&end_pt, &control_pt_2);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
@@ -658,7 +718,14 @@ pub mod discretization {
                         control_pt,
                         end_pt
                     } => {
-                        let discretizer = curves::discretize_quadratic_bezier(&self.state.current_position, control_pt, end_pt, true, &self.params);
+                        let discretizer = curves::discretize_quadratic_bezier(
+                            self.state.current_position,
+                            *control_pt,
+                            *end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
                         self.state.set_current_pos_and_ctrl_pt(&end_pt, &control_pt);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
@@ -669,23 +736,44 @@ pub mod discretization {
                     } => {
                         let control_pt = self.state.current_position + control_pt_offset;
                         let end_pt = self.state.current_position + end_pt_offset;
-                        let discretizer = curves::discretize_quadratic_bezier(&self.state.current_position, &control_pt, &end_pt, true, &self.params);
+                        let discretizer = curves::discretize_quadratic_bezier(
+                            self.state.current_position,
+                            control_pt,
+                            end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
                         self.state.set_current_pos_and_ctrl_pt(&end_pt, &control_pt);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
                     }
-                    PathCommand::SmoothQuadraticBezierCurveTo(end_point) => {
+                    PathCommand::SmoothQuadraticBezierCurveTo(end_pt) => {
                         let control_pt = self.state.current_position + (self.state.current_position - self.state.current_control_point);
-                        let discretizer = curves::discretize_quadratic_bezier(&self.state.current_position, &control_pt, end_point, true, &self.params);
-                        self.state.set_current_pos_and_ctrl_pt(&end_point, &control_pt);
+                        let discretizer = curves::discretize_quadratic_bezier(
+                            self.state.current_position,
+                            control_pt,
+                            *end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
+                        self.state.set_current_pos_and_ctrl_pt(end_pt, &control_pt);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
                     }
                     PathCommand::SmoothQuadraticBezierCurveToOffset(end_point_offset) => {
                         let control_pt = self.state.current_position + (self.state.current_position - self.state.current_control_point);
-                        let end_point = self.state.current_position + end_point_offset;
-                        let discretizer = curves::discretize_quadratic_bezier(&self.state.current_position, &control_pt, &end_point, true, &self.params);
-                        self.state.set_current_pos_and_ctrl_pt(&end_point, &control_pt);
+                        let end_pt = self.state.current_position + end_point_offset;
+                        let discretizer = curves::discretize_quadratic_bezier(
+                            self.state.current_position,
+                            control_pt,
+                            end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
+                        self.state.set_current_pos_and_ctrl_pt(&end_pt, &control_pt);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
                     }
@@ -696,7 +784,17 @@ pub mod discretization {
                         sweep_flag,
                         end_pt
                     } => {
-                        let discretizer = curves::discretize_elliptical_arc(&radii, *x_axis_rotation, *large_arc_flag, *sweep_flag, self.state.current_position, *end_pt, true, self.params);
+                        let discretizer = curves::discretize_elliptical_arc(
+                            &radii,
+                            *x_axis_rotation,
+                            *large_arc_flag,
+                            *sweep_flag,
+                            self.state.current_position,
+                            *end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
                         self.state.set_curr_pos_no_ctrl_pt(&end_pt);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
@@ -709,7 +807,17 @@ pub mod discretization {
                         end_pt_offset
                     } => {
                         let end_pt = self.state.current_position + end_pt_offset;
-                        let discretizer = curves::discretize_elliptical_arc(&radii, *x_axis_rotation, *large_arc_flag, *sweep_flag, self.state.current_position, end_pt, true, self.params);
+                        let discretizer = curves::discretize_elliptical_arc(
+                            &radii,
+                            *x_axis_rotation,
+                            *large_arc_flag,
+                            *sweep_flag,
+                            self.state.current_position,
+                            end_pt,
+                            true,
+                            &self.discretizer.params,
+                            &self.discretizer.transform
+                        );
                         self.state.set_curr_pos_no_ctrl_pt(&end_pt);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
@@ -788,19 +896,28 @@ pub mod discretization {
         }
     }
 
-    pub struct ParametricCurveDiscretizer<'a> {
+    /// This is an iterator that discretizes a parametric curve into a series of points.
+    /// The generated points are guaranteed to be within the given accuracy of the curve.
+    /// 
+    /// ## Notes
+    /// At the moment, the generated points just lie on the curve. In the future, we may want to
+    /// generate points that may not lie on the curve, but are within the given accuracy.
+    /// to minimize the error across the intermediate points.
+    pub struct ParametricCurveDiscretizerIterator<'t, 'a> {
         curve: Box<dyn ParametricCurve>,
-        params: &'a DiscretizationParams<'a>,
+        params: &'a DiscretizationParams, // TODO reference
+        transform: &'a DiscretizationTransform<'t>, // TODO reference
         skip_first: bool,
         initial_subs: u32,
         state: Option<ParametricCurveDiscretizerState>
     }
 
-    impl<'a> ParametricCurveDiscretizer<'a> {
-        pub fn new(curve: Box<dyn ParametricCurve>, params: &'a DiscretizationParams<'a>, skip_first: bool, initial_subs: u32) -> Self {
+    impl<'t, 'a > ParametricCurveDiscretizerIterator<'t, 'a> {
+        pub fn new(curve: Box<dyn ParametricCurve>, params: &'a DiscretizationParams, transform: &'a DiscretizationTransform<'t>, skip_first: bool, initial_subs: u32) -> Self {
             Self {
                 curve,
                 params,
+                transform,
                 skip_first,
                 initial_subs,
                 state: None,
@@ -808,7 +925,7 @@ pub mod discretization {
         }
 
         /// check if the given next point satisfies the discretization accuracy conditions
-        fn is_ok<'b1, 'c1>(state: &ParametricCurveDiscretizerState, params: &'b1 DiscretizationParams<'c1>, next_point: &Vec2f, mid_pt: &Vec2f) -> bool {
+        fn is_ok<'b1, 'c1>(state: &ParametricCurveDiscretizerState, params: &DiscretizationParams, next_point: &Vec2f, mid_pt: &Vec2f) -> bool {
             // if a point is outside of the area of interest, we don't need to check the other conditions
             // since we would not care about precision, we can just return true
             // ? this might not be correct as intermediate points might be inside the aoi
@@ -858,14 +975,14 @@ pub mod discretization {
         finished: bool,
     }
 
-    impl<'a> Iterator for ParametricCurveDiscretizer<'a> {
+    impl<'t, 'a> Iterator for ParametricCurveDiscretizerIterator<'t, 'a> {
         type Item = Vec2f;
 
         fn next(&mut self) -> Option<Self::Item> {
 
             // the transformed curve
             let s = |t: f32| {
-                return self.params.transform.eval(self.curve.eval(t));
+                return self.transform.eval(self.curve.eval(t));
             };
 
             if let Some(ref mut state) = self.state {
@@ -1059,15 +1176,15 @@ pub mod discretization {
             }
         }
 
-        pub fn discretize_segment<'a>(p0: &Vec2f, p1: &Vec2f, skip_first: bool, params: &'a DiscretizationParams<'a>) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
-            if params.transform.is_line_preserving() {
-                let p0_primed = params.transform.eval(*p0);
-                let p1_primed = params.transform.eval(*p1);
+        pub fn discretize_segment<'a, 't: 'a>(p0: Vec2f, p1: Vec2f, skip_first: bool, params: &'a DiscretizationParams, transform: &'a DiscretizationTransform<'t>) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
+            if transform.is_line_preserving() {
+                let p0_primed = transform.eval(p0);
+                let p1_primed = transform.eval(p1);
                 let it = SegmentPointsIterator::new(&p0_primed, &p1_primed, skip_first);
                 Box::new(it)
             } else {
-                let line_curve = ParametricLineFunction::new(*p0, *p1);
-                let discretizer = ParametricCurveDiscretizer::new(Box::new(line_curve), params, skip_first, 1); // TODO maybe zero initial subdivisions is enough?
+                let line_curve = ParametricLineFunction::new(p0, p1);
+                let discretizer = ParametricCurveDiscretizerIterator::new(Box::new(line_curve), params, transform, skip_first, 1); // TODO maybe zero initial subdivisions is enough?
                 Box::new(discretizer)
             }
         }
@@ -1105,10 +1222,10 @@ pub mod discretization {
             }
         }
 
-        pub fn discretize_cubic_bezier<'a>(p0: &Vec2f, p1: &Vec2f, p2: &Vec2f, p3: &Vec2f, skip_first: bool, params: &'a DiscretizationParams<'a>) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
+        pub fn discretize_cubic_bezier<'a, 't: 'a>(p0: Vec2f, p1: Vec2f, p2: Vec2f, p3: Vec2f, skip_first: bool, params: &'a DiscretizationParams, transform: &'a DiscretizationTransform<'t>) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
             const DEGREE: u32 = 3;
-            let curve = Cubic2dBezierFunction::new(*p0, *p1, *p2, *p3);
-            let discretizer = ParametricCurveDiscretizer::new(Box::new(curve), params, skip_first, DEGREE);
+            let curve = Cubic2dBezierFunction::new(p0, p1, p2, p3);
+            let discretizer = ParametricCurveDiscretizerIterator::new(Box::new(curve), params, transform, skip_first, DEGREE);
             Box::new(discretizer)
         }
 
@@ -1141,10 +1258,10 @@ pub mod discretization {
             }
         }
 
-        pub fn discretize_quadratic_bezier<'a>(p0: &Vec2f, p1: &Vec2f, p2: &Vec2f, skip_first: bool, params: &'a DiscretizationParams<'a>) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
+        pub fn discretize_quadratic_bezier<'a, 't: 'a>(p0: Vec2f, p1: Vec2f, p2: Vec2f, skip_first: bool, params: &'a DiscretizationParams, transform: &'a DiscretizationTransform<'t>) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
             const DEGREE: u32 = 2;
-            let curve = Quadratic2dBezierFunction::new(*p0, *p1, *p2);
-            let discretizer = ParametricCurveDiscretizer::new(Box::new(curve), params, skip_first, DEGREE);
+            let curve = Quadratic2dBezierFunction::new(p0, p1, p2);
+            let discretizer = ParametricCurveDiscretizerIterator::new(Box::new(curve), params, transform, skip_first, DEGREE);
             Box::new(discretizer)
         }
 
@@ -1258,10 +1375,10 @@ pub mod discretization {
             CenterParametricArcFunction::new(c, radii, theta_0, delta_theta, x_axis_rotation)
         }
 
-        pub fn discretize_elliptical_arc<'a>(radii: &Vec2f, x_axis_rotation: f32, large_arc_flag: bool, sweep_flag: bool, p0: Vec2f, p1: Vec2f, skip_first: bool, params: &'a DiscretizationParams<'a>) -> Box<dyn Iterator<Item = Vec2f> + 'a>
+        pub fn discretize_elliptical_arc<'a, 't: 'a>(radii: &Vec2f, x_axis_rotation: f32, large_arc_flag: bool, sweep_flag: bool, p0: Vec2f, p1: Vec2f, skip_first: bool, params: &'a DiscretizationParams, transform: &'a DiscretizationTransform<'t>) -> Box<dyn Iterator<Item = Vec2f> + 'a>
         {
             let arc = endpoint_to_center_parametric_arc_function(radii, x_axis_rotation, large_arc_flag, sweep_flag, p0, p1);
-            let discretizer = ParametricCurveDiscretizer::new(Box::new(arc), params, skip_first, 1);
+            let discretizer = ParametricCurveDiscretizerIterator::new(Box::new(arc), params, transform, skip_first, 1);
             Box::new(discretizer)
         }
     }
