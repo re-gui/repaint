@@ -407,8 +407,9 @@ pub mod discretization {
         //Div
     };
 
-    const MIN_DT: f32 = 1e-3; // TODO use
-    const DT_TOL: f32 = 1e-3; // TODO use
+    //const DT_TOL: f32 = std::f32::EPSILON.sqrt(); // TODO use
+    //const DT_TOL: f32 = 1e-6;
+    //const MIN_DT: f32 = 1e-3;
     // TODO rename in *_DT in *_STEP ?
 
     #[derive(Clone, Copy, Debug)]
@@ -868,11 +869,14 @@ pub mod discretization {
         fn eval(&self, t: f32) -> Vec2f;
         fn start(&self) -> f32;
         fn end(&self) -> f32;
+        fn param_range_width(&self) -> f32 {
+            (self.end() - self.start()).abs()
+        }
 
         /// checks if the value is close or past the end of the curve
         fn is_end_or_past_end(&self, t: f32) -> bool {
             // if the value is close to the end, we consider it to be the end
-            if (t - self.end()).abs() < DT_TOL {
+            if (t - self.end()).abs() < std::f32::EPSILON.sqrt() * self.param_range_width() {
                 return true;
             }
 
@@ -1036,7 +1040,7 @@ pub mod discretization {
                             let next_pt = s(next_t);
                             let mid_pt = s(state.t + stepped / 2.0);
                             let next_pt_is_ok = Self::is_ok(&state, &self.params, &next_pt, &mid_pt);
-                            if stepped.abs() < MIN_DT {
+                            if stepped.abs() < std::f32::EPSILON.sqrt() * self.curve.param_range_width() {
                                 break;
                             }
                             step = stepped;
@@ -1079,7 +1083,7 @@ pub mod discretization {
 
                 // TODO move this check to the constructor
                 // we do not want to discretize curves that have very small parameter range
-                if (self.curve.end() - self.curve.start()).abs() < DT_TOL {
+                if (self.curve.end() - self.curve.start()).abs() < std::f32::EPSILON.sqrt() {
                     // this is a degenerate curve
                     return None;
                 }
