@@ -1,13 +1,9 @@
-use std::path::PathBuf;
-
-
 
 fn main() {
     println!("Hello from an example!");
 
     let exe_path = std::env::current_exe().unwrap_or("\\\\?\\./target".into());
     let exe_dir = exe_path.parent().unwrap();
-    //let exe_dir: PathBuf = "\\\\?\\C:/Users/lucac/Documents/GitHub/repaint/examples".into();
 
     let out_file = exe_dir.join("hello.txt");
     let out_file_str = out_file.to_str();
@@ -35,20 +31,21 @@ fn main() {
         pc::LineTo(Vec2f::new(20.0, 20.0)),
         pc::LineTo(Vec2f::new(23.0, 20.0)),
         pc::EllipticalArcToOffset{
-            radii: Vec2f::new(20.0, 50.0),
+            radii: Vec2f::new(20.0, 20.0),
             x_axis_rotation: 0.25,
             large_arc_flag: false,
             sweep_flag: false,
-            end_pt_offset: Vec2f::new(30.0, 0.0),
+            end_pt_offset: Vec2f::new(20.0, 0.0),
         },
     ];
-    let params = pp::DiscretizationParams {
-        tolerance: 1.25,
+    let params = pp::discretization::DiscretizationParams {
+        tolerance: 0.25,
         max_angle: 1.1,
         aoi: None,
-        transform: pp::DiscretizationTransform::Identity,
+        transform: pp::discretization::DiscretizationTransform::Identity,
     };
-    let discr_commands = pp::discretize(&path, &params);
+    let mut it = path.iter();
+    let discr_commands_iter = pp::discretization::PathDiscretizer::new(&mut it, &params);
 
     let mut svg = String::new();
     svg.push_str(&format!(r#"<svg width="100" height="100" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">"#));
@@ -65,15 +62,14 @@ fn main() {
             }
             points.clear();
         };
-        for i in 0..discr_commands.len() {
-            let command = &discr_commands[i];
+        for command in discr_commands_iter {
             match command {
                 pl::BrokenPolylineCommand::MoveTo(pt) => {
                     flush(&mut points);
-                    points.push(*pt);
+                    points.push(pt);
                 },
                 pl::BrokenPolylineCommand::LineTo(pt) => {
-                    points.push(*pt);
+                    points.push(pt);
                 },
             }
         }
