@@ -11,9 +11,12 @@ type Vec2f = na::Vector2<f32>;
 /// Clip a rectangle to another rectangle. Returns `None` if the rectangle is completely outside the clip rectangle.
 pub fn clip_rect(rect: &FRect, clip_rect: &FRect) -> Option<FRect> {
 
-    // TODO better checks and allow for infinite rects
+    // old
+    //if !rect.min.x.is_finite() || !rect.min.y.is_finite() || !rect.max.x.is_finite() || !rect.max.y.is_finite() {
+    //    return None;
+    //}
 
-    if !rect.min.x.is_finite() || !rect.min.y.is_finite() || !rect.max.x.is_finite() || !rect.max.y.is_finite() {
+    if rect.min.x.is_nan() || rect.min.y.is_nan() || rect.max.x.is_nan() || rect.max.y.is_nan() {
         return None;
     }
 
@@ -25,6 +28,7 @@ pub fn clip_rect(rect: &FRect, clip_rect: &FRect) -> Option<FRect> {
 
 /// Clip a line to a rectangle. Returns `None` if the line is completely outside the rectangle.
 pub fn clip_line(start: &Vector2<f32>, end: &Vector2<f32>, rect: &FRect) -> Option<(Vector2<f32>, Vector2<f32>)> {
+    // TODO better checks to allow for infinite lines but not NaNs
     if !start.x.is_finite() || !start.y.is_finite() || !end.x.is_finite() || !end.y.is_finite() {
         return None;
     }
