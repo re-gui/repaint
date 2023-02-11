@@ -149,6 +149,133 @@ pub mod default_color_types {
             )
         }
     }
+
+    /// A CSS style color.
+    pub enum CssColor {
+        /// None color
+        /// 
+        /// In most cases, it is the same as transparent.
+        None,
+
+        /// Css like RGB color.
+        /// 
+        /// Values for the components are in the range 0 to 255.
+        Rgb{r: u8, g: u8, b: u8},
+
+        /// Css like RGBA color.
+        /// 
+        /// Values for the components are in the range 0 to 255 while the alpha value is in the range 0.0 to 1.0.
+        Rgba{r: u8, g: u8, b: u8, a: f32},
+
+        /// RGB color with floating point components.
+        Rgbf{r: f32, g: f32, b: f32},
+
+        /// RGBA color with floating point components.
+        Rgbaf{r: f32, g: f32, b: f32, a: f32},
+
+        /// Hex color.
+        Hex([u8; 3]),
+
+        /// Hex color with alpha.
+        Hexa([u8; 4]),
+
+        Named(StandardCssColors),
+    }
+
+    /// Standard CSS colors.
+    /// 
+    /// Example:
+    /// ```rust
+    /// let color: CssColor = css_named::Black.into();
+    /// ```
+    pub mod css_named {
+        pub use super::StandardCssColorsL1::*;
+        pub use super::StandardCssColorsL2::*;
+        // TODO add L3
+        // TODO add L4
+    }
+
+    /// Standard CSS colors.
+    pub enum StandardCssColors {
+        L1(StandardCssColorsL1),
+        L2(StandardCssColorsL2),
+        // TODO add L3
+        // TODO add L4
+    }
+
+    /// Standard CSS colors defined in CSS Level 1.
+    /// 
+    /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/named-color>
+    pub enum StandardCssColorsL1 {
+        Black,
+        Silver,
+        Gray,
+        White,
+        Maroon,
+        Red,
+        Purple,
+        Fuchsia,
+        Green,
+        Lime,
+        Olive,
+        Yellow,
+        Navy,
+        Blue,
+        Teal,
+        Aqua,
+    }
+
+    impl StandardCssColorsL1 {
+        pub fn to_css_rgba(&self) -> CssColor {
+            use StandardCssColorsL1::*;
+            match self {
+                Black => CssColor::Hex([0x00, 0x00, 0x00]),
+                Silver => CssColor::Hex([0xC0, 0xC0, 0xC0]),
+                Gray => CssColor::Hex([0x80, 0x80, 0x80]),
+                White => CssColor::Hex([0xFF, 0xFF, 0xFF]),
+                Maroon => CssColor::Hex([0x80, 0x00, 0x00]),
+                Red => CssColor::Hex([0xFF, 0x00, 0x00]),
+                Purple => CssColor::Hex([0x80, 0x00, 0x80]),
+                Fuchsia => CssColor::Hex([0xFF, 0x00, 0xFF]),
+                Green => CssColor::Hex([0x00, 0x80, 0x00]),
+                Lime => CssColor::Hex([0x00, 0xFF, 0x00]),
+                Olive => CssColor::Hex([0x80, 0x80, 0x00]),
+                Yellow => CssColor::Hex([0xFF, 0xFF, 0x00]),
+                Navy => CssColor::Hex([0x00, 0x00, 0x80]),
+                Blue => CssColor::Hex([0x00, 0x00, 0xFF]),
+                Teal => CssColor::Hex([0x00, 0x80, 0x80]),
+                Aqua => CssColor::Hex([0x00, 0xFF, 0xFF]),
+            }
+        }
+    }
+
+    impl Into<CssColor> for StandardCssColorsL1 {
+        fn into(self) -> CssColor {
+            CssColor::Named(StandardCssColors::L1(self))
+        }
+    }
+
+    /// Standard CSS colors defined in CSS Level 2.
+    /// 
+    /// See <https://developer.mozilla.org/en-US/docs/Web/CSS/named-color>
+    pub enum StandardCssColorsL2 {
+        Orange,
+    }
+
+    impl StandardCssColorsL2 {
+        pub fn to_css_rgba(&self) -> CssColor {
+            use StandardCssColorsL2::*;
+            match self {
+                Orange => CssColor::Hex([0xFF, 0xA5, 0x00]),
+            }
+        }
+    }
+
+    impl Into<CssColor> for StandardCssColorsL2 {
+        fn into(self) -> CssColor {
+            CssColor::Named(StandardCssColors::L2(self))
+        }
+    }
 }
 
 pub mod default_colors {
