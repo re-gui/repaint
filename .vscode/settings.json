@@ -12,7 +12,8 @@
         "nalgebra",
         "Polyline",
         "polylines",
-        "rasterization"
+        "rasterization",
+        "Skia"
     ],
     "svg.preview.background": "transparent"
 }

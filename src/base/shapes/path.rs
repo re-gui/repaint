@@ -18,10 +18,10 @@ type Mat2f = nalgebra::Matrix2<f32>;
 pub enum PathCommand {
     /// Move to a point, effectively starting a new path.
     ///
-    /// This command should be used at the beginning of a path, after a [`ClosePath`] command
+    /// This command should be used at the beginning of a path, after a [`PathCommand::ClosePath`] command
     /// of when you want to start a new path. If you do not use this command at the beginning,
     /// the path will be implicitly moved to the origin; if you do not use this command after
-    /// a [`ClosePath`] command, the path will be implicitly moved to the last point of the previous path.
+    /// a [`PathCommand::ClosePath`] command, the path will be implicitly moved to the last point of the previous path.
     ///
     /// TODO ...
     MoveTo(Vec2f),
@@ -166,7 +166,7 @@ pub enum PathCommand {
 
     /// Draw an elliptical arc to a point.
     ///
-    /// See https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths#arcs
+    /// See <https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths#arcs>
     ///
     /// TODO ...
     //EllipticalArcTo(f32, f32, f32, bool, bool, Vec2f),

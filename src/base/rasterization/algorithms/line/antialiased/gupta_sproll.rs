@@ -2,7 +2,7 @@ use nalgebra as na;
 type Vec2f = na::Vector2<f32>;
 //type Vec2i = na::Vector2<i32>;
 
-/// See https://en.wikipedia.org/wiki/Line_drawing_algorithm
+/// See <https://en.wikipedia.org/wiki/Line_drawing_algorithm>
 pub fn line<F: FnMut(u32, u32, f32) -> ()>(start: &Vec2f, end: &Vec2f, plot: &mut F) -> () {
     // TODO non funziona bene
     if start == end {

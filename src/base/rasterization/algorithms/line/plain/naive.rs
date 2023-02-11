@@ -10,14 +10,14 @@ type Vec2i = na::Vector2<i32>;
 
 /// Draw a line from `start` to `end` using the Bresenham? algorithm.
 ///
-/// The algorithm is taken from wikipedia https://en.wikipedia.org/wiki/Line_drawing_algorithm
+/// The algorithm is taken from wikipedia <https://en.wikipedia.org/wiki/Line_drawing_algorithm>
 ///
 /// ## Arguments
 /// The function takes three arguments:
 /// * `start` - the start point of the line
 /// * `end` - the end point of the line
 /// * `plot` - a function that is called for each point on the line
-///
+/// * `rect` - the clipping rectangle
 /// ## Notes
 ///  - this algorithm is not optimized for speed, yet
 ///  - this algorithm is not optimized for integer coordinates, yet
