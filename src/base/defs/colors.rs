@@ -11,6 +11,16 @@ pub trait ColorType:
 {
 }
 
+pub trait ColorWithAlpha: ColorType {
+    fn alpha_value(&self) -> f32;
+    fn set_alpha_value(&mut self, alpha: f32);
+    fn with_alpha_value(&self, alpha: f32) -> Self {
+        let mut color = *self;
+        color.set_alpha_value(alpha);
+        color
+    }
+}
+
 pub mod default_color_types {
     use super::*;
 
@@ -101,6 +111,22 @@ pub mod default_color_types {
     pub type RgbaColor = RgbaTColor<u8>;
     impl ColorType for RgbaFColor {}
     impl ColorType for RgbaColor {}
+    impl ColorWithAlpha for RgbaFColor {
+        fn alpha_value(&self) -> f32 {
+            self.a()
+        }
+        fn set_alpha_value(&mut self, alpha: f32) {
+            *self.a_mut() = alpha;
+        }
+    }
+    impl ColorWithAlpha for RgbaColor {
+        fn alpha_value(&self) -> f32 {
+            self.a() as f32 / 255.0
+        }
+        fn set_alpha_value(&mut self, alpha: f32) {
+            *self.a_mut() = (alpha.min(0.0).max(1.0) * 255.0).round() as u8;
+        }
+    }
 
     impl From<RgbaFColor> for RgbaColor {
         fn from(color: RgbaFColor) -> Self {
