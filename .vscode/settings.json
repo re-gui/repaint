@@ -8,11 +8,14 @@
         "Discretizer",
         "discretizes",
         "discretizing",
+        "Hexa",
         "lerp",
         "nalgebra",
         "Polyline",
         "polylines",
         "rasterization",
+        "Rgbaf",
+        "Rgbf",
         "Skia"
     ],
     "svg.preview.background": "transparent"
