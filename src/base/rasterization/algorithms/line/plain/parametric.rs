@@ -4,7 +4,7 @@ type Vec2f = na::Vector2<f32>;
 
 
 /// Originally written by copilot.
-/// Produces artifacts.
+/// Produces artifacts, maybe it is better to use [`super::naive::line`] instead.
 pub fn line<F: FnMut(u32, u32) -> ()>(start: &Vec2f, end: &Vec2f, plot: &mut F) -> () {
 
     if start == end {
