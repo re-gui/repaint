@@ -1,5 +1,4 @@
-
-pub mod defs;
-pub mod shapes;
 pub mod clipping;
+pub mod defs;
 pub mod rasterization;
+pub mod shapes;

@@ -1,4 +1,2 @@
-
-
-pub mod parametric;
 pub mod naive;
+pub mod parametric;

@@ -1,4 +1,3 @@
-
 use nalgebra as na;
 type Vec2f = na::Vector2<f32>;
 //type Vec2i = na::Vector2<i32>;

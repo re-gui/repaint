@@ -1,7 +1,6 @@
-
 use nalgebra as na;
 
-use na::{Vector2};
+use na::Vector2;
 
 use crate::{base::defs::rect::Rect, base::shapes::polyline::BrokenPolylineCommand};
 
@@ -39,37 +38,39 @@ pub struct Segment {
 
 impl Segment {
     fn new(start: Vector2<f32>, end: Vector2<f32>) -> Self {
-        Self {
-            start,
-            end,
-        }
+        Self { start, end }
     }
 }
 
 static mut LAST_VALUE: usize = 0;
 
-pub fn fill<C: LineSpanConsumer>(contour_commands: &[BrokenPolylineCommand], clip_rect: &Rect<usize>, antialiased: bool, consumer: &mut C) {
+pub fn fill<C: LineSpanConsumer>(
+    contour_commands: &[BrokenPolylineCommand],
+    clip_rect: &Rect<usize>,
+    antialiased: bool,
+    consumer: &mut C,
+) {
     // check if positively oriented
     //assert!(signed_polygon_area(contour) > 0.0);
 
     let mut segments = {
-
-
         let mut segments = Vec::<Segment>::new();
         segments.reserve(contour_commands.len());
-        
+
         let mut pos = Vector2::new(0.0, 0.0);
 
         for cmd in contour_commands {
             match cmd {
                 BrokenPolylineCommand::MoveTo(pt) => {
                     pos = *pt;
-                },
+                }
                 BrokenPolylineCommand::LineTo(pt) => {
                     let mut segment = Segment::new(pos, *pt);
 
                     // ingore degenerate segments
-                    if segment.start == segment.end { continue; }
+                    if segment.start == segment.end {
+                        continue;
+                    }
 
                     // make sure that start.y <= end.y
                     if segment.start.y > segment.end.y {
@@ -78,13 +79,11 @@ pub fn fill<C: LineSpanConsumer>(contour_commands: &[BrokenPolylineCommand], cli
 
                     segments.push(segment);
                     pos = *pt;
-                },
+                }
             }
         }
 
-        segments.sort_by(|a, b| {
-            a.start.y.partial_cmp(&b.start.y).unwrap()
-        });
+        segments.sort_by(|a, b| a.start.y.partial_cmp(&b.start.y).unwrap());
 
         segments
     };
@@ -116,14 +115,13 @@ pub fn fill<C: LineSpanConsumer>(contour_commands: &[BrokenPolylineCommand], cli
         (start_line, end_line)
     };
 
-    let y_offset : f32 = 0.0;
-    let x_offset : f32 = 0.0;
+    let y_offset: f32 = 0.0;
+    let x_offset: f32 = 0.0;
 
     //println!("---------");
 
     // scan the lines
     for y_line in start_line..end_line {
-
         let y = y_line as f32 + y_offset;
 
         let active_segments: &Vec<Segment> = {
@@ -177,17 +175,19 @@ pub fn fill<C: LineSpanConsumer>(contour_commands: &[BrokenPolylineCommand], cli
             intersections.clear();
 
             for segment in active_segments {
-                let x = segment.start.x + (segment.end.x - segment.start.x) * ((y as f32 + y_offset) - segment.start.y) / (segment.end.y - segment.start.y);
+                let x = segment.start.x
+                    + (segment.end.x - segment.start.x) * ((y as f32 + y_offset) - segment.start.y)
+                        / (segment.end.y - segment.start.y);
                 let min_x = segment.start.x.min(segment.end.x);
                 let max_x = segment.start.x.max(segment.end.x);
-                let intersection = (x + x_offset).clamp(min_x, max_x).clamp(0.0, clip_rect.width() as f32);
+                let intersection = (x + x_offset)
+                    .clamp(min_x, max_x)
+                    .clamp(0.0, clip_rect.width() as f32);
                 //intersections.push();
                 intersections.push(intersection);
             }
 
-            intersections.sort_by(|a, b| {
-                a.partial_cmp(b).unwrap()
-            });
+            intersections.sort_by(|a, b| a.partial_cmp(b).unwrap());
 
             &intersections
         };
@@ -247,9 +247,7 @@ pub fn fill<C: LineSpanConsumer>(contour_commands: &[BrokenPolylineCommand], cli
 
         consumer.end_line();
     }
-
 }
-
 
 pub fn signed_polygon_area(polygon: &Vec<Vector2<f32>>) -> f32 {
     let mut area: f32 = 0.0;
@@ -267,8 +265,7 @@ struct F32 {
     value: f32,
 }
 
-impl Eq for F32 {
-}
+impl Eq for F32 {}
 
 impl Ord for F32 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {

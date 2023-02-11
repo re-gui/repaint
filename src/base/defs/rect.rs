@@ -1,29 +1,23 @@
+use std::ops::{Add, AddAssign, Sub, SubAssign};
 
-
-use std::ops::{
-    Sub,
-    Add,
-    AddAssign, SubAssign,
-};
-
+use na::Vector2;
 use nalgebra as na;
-use na::{
-    Vector2
-};
 
 pub type FRect = Rect<f32>;
 
 /// This is a rectangle with a min and max point.
 #[derive(Debug, Clone, Copy)]
-pub struct Rect<T> where
-    T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + PartialOrd
+pub struct Rect<T>
+where
+    T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + PartialOrd,
 {
     pub min: Vector2<T>,
     pub max: Vector2<T>,
 }
 
-impl<T> Rect<T> where
-    T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + SubAssign + PartialOrd
+impl<T> Rect<T>
+where
+    T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + SubAssign + PartialOrd,
 {
     /// Creates a new rectangle from a min and max point.
     /// The min and max points are not checked for validity.
@@ -36,11 +30,11 @@ impl<T> Rect<T> where
     pub fn new_checked(min: Vector2<T>, max: Vector2<T>) -> Rect<T> {
         let min = Vector2::<T>::new(
             *tmp_partial_min(&min.x, &max.x),
-            *tmp_partial_min(&min.y, &max.y)
+            *tmp_partial_min(&min.y, &max.y),
         );
         let max = Vector2::<T>::new(
             *tmp_partial_max(&min.x, &max.x),
-            *tmp_partial_max(&min.y, &max.y)
+            *tmp_partial_max(&min.y, &max.y),
         );
 
         return Rect { min, max };
@@ -55,10 +49,7 @@ impl<T> Rect<T> where
     /// Creates a new rectangle from a position and size.
     /// If the size is negative, the rectangle is inverted.
     pub fn from_pos_and_size_coords(x: T, y: T, width: T, height: T) -> Rect<T> {
-        Self::from_pos_and_size(
-            Vector2::new(x, y),
-            Vector2::new(width, height)
-        )
+        Self::from_pos_and_size(Vector2::new(x, y), Vector2::new(width, height))
     }
 
     /// Get the width of the rectangle.
@@ -98,7 +89,10 @@ impl<T> Rect<T> where
 
     /// Returns true if the rectangle contains the given point.
     pub fn contains(&self, point: &Vector2<T>) -> bool {
-        point.x >= self.min.x && point.x <= self.max.x && point.y >= self.min.y && point.y <= self.max.y
+        point.x >= self.min.x
+            && point.x <= self.max.x
+            && point.y >= self.min.y
+            && point.y <= self.max.y
     }
 
     /// get the x range of the rectangle
@@ -140,8 +134,9 @@ pub trait VideoRect<T> {
     fn bottom_right(&self) -> Vector2<T>;
 }
 
-impl<T> VideoRect<T> for Rect<T> where
-    T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + SubAssign + PartialOrd
+impl<T> VideoRect<T> for Rect<T>
+where
+    T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + SubAssign + PartialOrd,
 {
     fn top_left(&self) -> Vector2<T> {
         self.min
@@ -160,9 +155,11 @@ impl<T> VideoRect<T> for Rect<T> where
     }
 }
 
-
 /// Returns the minimum of two values using PartialOrd.
-fn tmp_partial_min<'a, T>(a: &'a T, b: &'a T) -> &'a T where T: PartialOrd {
+fn tmp_partial_min<'a, T>(a: &'a T, b: &'a T) -> &'a T
+where
+    T: PartialOrd,
+{
     if a < b {
         a
     } else {
@@ -171,7 +168,10 @@ fn tmp_partial_min<'a, T>(a: &'a T, b: &'a T) -> &'a T where T: PartialOrd {
 }
 
 /// Returns the maximum of two values using PartialOrd.
-fn tmp_partial_max<'a, T>(a: &'a T, b: &'a T) -> &'a T where T: PartialOrd {
+fn tmp_partial_max<'a, T>(a: &'a T, b: &'a T) -> &'a T
+where
+    T: PartialOrd,
+{
     if a > b {
         a
     } else {

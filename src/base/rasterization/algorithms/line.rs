@@ -1,4 +1,2 @@
-
-
-pub mod plain;
 pub mod antialiased;
+pub mod plain;
