@@ -466,3 +466,37 @@ pub mod default_colors {
     pub const PURPLE: RgbaFColor = RgbaFColor::new(0.5, 0.0, 1.0, 1.0);
     pub const PINK: RgbaFColor = RgbaFColor::new(1.0, 0.0, 0.5, 1.0);
 }
+
+/// Convert a color from RGB to HSL.
+/// 
+/// The input ranges are int the range [0, 1].
+/// The output ranges are:
+///   hue: [0, 360]
+///   saturation: [0, 1]
+///   lightness: [0, 1]
+fn rgb_to_hsl(r: f32, g: f32, b: f32) -> (f32, f32, f32) {
+    // TODO written by copilot, to check
+    let max = r.max(g.max(b));
+    let min = r.min(g.min(b));
+    let delta = max - min;
+
+    let hue = if delta == 0.0 {
+        0.0
+    } else if max == r {
+        60.0 * ((g - b) / delta % 6.0)
+    } else if max == g {
+        60.0 * ((b - r) / delta + 2.0)
+    } else {
+        60.0 * ((r - g) / delta + 4.0)
+    };
+
+    let lightness = (max + min) / 2.0;
+
+    let saturation = if delta == 0.0 {
+        0.0
+    } else {
+        delta / (1.0 - (2.0 * lightness - 1.0).abs())
+    };
+
+    (hue, saturation, lightness)
+}

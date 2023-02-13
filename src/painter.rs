@@ -22,16 +22,16 @@ pub trait WithBlendMode {
     fn has_blend_mode(&self) -> bool {
         false
     }
-    fn can_set_blend_mode(&self, mode: BlendMode) -> bool {
+    fn can_set_blend_mode(&self, _mode: BlendMode) -> bool {
         self.has_blend_mode()
     }
     fn blend_mode(&self) -> BlendMode {
         BlendMode::SrcOver
     }
-    fn set_blend_mode(&mut self, mode: BlendMode) {
+    fn set_blend_mode(&mut self, _mode: BlendMode) {
         // ...
     }
     fn enumerate_valid_blend_modes<'s>(&'s self) -> Box<dyn Iterator<Item = BlendMode> + 's> {
-        Box::new(BlendMode::enumerate().filter(move |mode| self.can_set_blend_mode(*mode)))
+        Box::new(BlendMode::enumerate_all().filter(move |mode| self.can_set_blend_mode(*mode)))
     }
 }

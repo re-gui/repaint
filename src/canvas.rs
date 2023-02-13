@@ -9,6 +9,7 @@ In this module we define the [`Canvas`] trait that represents a drawing surface 
 use crate::painter::{Painter, WithBlendMode};
 
 
+
 /// An object that can be drawn on.
 /// 
 /// The canvas provides a painter that can be used to draw on it, see the [repaint architecture](crate#architecture) for more details on how this works conceptually.

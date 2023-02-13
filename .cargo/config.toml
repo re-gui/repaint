@@ -1,0 +1,5 @@
+[build]
+#rustdocflags = [ "--html-in-header", "C:/Users/lucac/Documents/GitHub/repaint/src/docs-header.html" ]
+rustdocflags = [ "--html-in-header", "./src/docs-header.html" ]
+# https://github.com/victe/rust-latex-doc-minimal-example
+# https://github.com/arkworks-rs/algebra/pull/427
