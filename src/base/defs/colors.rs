@@ -474,7 +474,7 @@ pub mod default_colors {
 ///   hue: [0, 360]
 ///   saturation: [0, 1]
 ///   lightness: [0, 1]
-fn rgb_to_hsl(r: f32, g: f32, b: f32) -> (f32, f32, f32) {
+pub fn rgb_to_hsl(r: f32, g: f32, b: f32) -> (f32, f32, f32) {
     // TODO written by copilot, to check
     let max = r.max(g.max(b));
     let min = r.min(g.min(b));

@@ -5,7 +5,7 @@ Provides the [`Painter`] trait.
 */
 
 use crate::base::blending::BlendMode;
-use crate::canvas::Canvas;
+//use crate::canvas::Canvas;
 
 /// A painter that can be used to draw on a [`Canvas`].
 /// 
