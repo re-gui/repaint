@@ -7,7 +7,7 @@ Provides the [`Painter`] trait.
 use crate::base::blending::BlendMode;
 //use crate::canvas::Canvas;
 
-/// A painter that can be used to draw on a [`Canvas`].
+/// A painter that can be used to draw on a [`Canvas`](`crate::canvas::Canvas`).
 /// 
 /// In order to organize the drawing process, the painter
 /// trait is split into conceptually separate parts that provide
@@ -17,7 +17,6 @@ pub trait Painter: WithBlendMode {
 }
 
 pub trait WithBlendMode {
-
     /// Returns whether this painter supports blend modes.
     fn has_blend_mode(&self) -> bool {
         false
@@ -35,3 +34,4 @@ pub trait WithBlendMode {
         Box::new(BlendMode::enumerate_all().filter(move |mode| self.can_set_blend_mode(*mode)))
     }
 }
+

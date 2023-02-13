@@ -341,25 +341,25 @@ pub mod modes_impl {
         (r_col, g_col, b_col, r_a)
     }
 
-    /// Implementation of [`BlendMode::Clear`].
+    /// Implementation of [`BlendMode::Clear`](`super::BlendMode::Clear`).
     #[inline]
     pub fn clear(_src: &RgbaFColor, dst: &mut RgbaFColor) {
         *dst = default_colors::TRANSPARENT;
     }
 
-    /// Implementation of [`BlendMode::Src`].
+    /// Implementation of [`BlendMode::Src`](`super::BlendMode::Src`).
     #[inline]
     pub fn src(src: &RgbaFColor, dst: &mut RgbaFColor) {
         *dst = *src;
     }
 
-    /// Implementation of [`BlendMode::Dst`].
+    /// Implementation of [`BlendMode::Dst`](`super::BlendMode::Dst`).
     #[inline]
     pub fn dst(_src: &RgbaFColor, _dst: &mut RgbaFColor) {
         // do nothing
     }
 
-    /// Implementation of [`BlendMode::SrcOver`].
+    /// Implementation of [`BlendMode::SrcOver`](`super::BlendMode::SrcOver`).
     #[inline]
     pub fn src_over(src: &RgbaFColor, dst: &mut RgbaFColor) {
 
