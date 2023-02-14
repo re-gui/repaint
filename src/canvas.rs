@@ -6,7 +6,7 @@ In this module we define the [`Canvas`] trait that represents a drawing surface 
 
 */
 
-use crate::painter::{Painter, WithBlendMode};
+use crate::painter::{Painter, WithBlendModeMethods, WithAntialiasMethods};
 
 
 
@@ -52,5 +52,8 @@ impl<'a> CompactPainter<'a> {
 impl Painter for CompactPainter<'_> {
 }
 
-impl WithBlendMode for CompactPainter<'_> {
+impl WithBlendModeMethods for CompactPainter<'_> {
+}
+
+impl WithAntialiasMethods for CompactPainter<'_> {
 }
