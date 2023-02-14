@@ -14,11 +14,11 @@ use crate::base::defs::antialiasing::AntialiasMode;
 /// trait is split into conceptually separate parts that provide
 /// different functionality:
 ///  - [`WithBlendMode`] contains the methods related to blend modes
-pub trait Painter: WithBlendModeMethods + WithAntialiasMethods {
+pub trait Painter: BlendModeMethods + AntialiasMethods {
 }
 
 /// Methods related to blend modes.
-pub trait WithBlendModeMethods {
+pub trait BlendModeMethods {
 
     /// Returns whether this painter supports blend modes.
     /// 
@@ -56,7 +56,7 @@ pub trait WithBlendModeMethods {
 }
 
 /// Methods related to antialiasing.
-pub trait WithAntialiasMethods {
+pub trait AntialiasMethods {
     /// Returns whether this painter supports antialiasing.
     fn has_antialias(&self) -> bool {
         false
