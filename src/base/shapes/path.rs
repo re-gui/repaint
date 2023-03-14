@@ -442,6 +442,7 @@ pub mod discretization {
     use super::{Mat2f, Vec2f};
     use crate::base::defs::rect::FRect;
     use crate::base::shapes::{path::PathCommand, polyline::BrokenPolylineCommand};
+    use crate::base::transform::Transform2d;
 
     use std::ops::{
         Add,
@@ -480,58 +481,7 @@ pub mod discretization {
         }
     }
 
-    /// This enum represents the transform to apply to the curve before discretizing it.
-    #[derive(Clone, Copy)]
-    pub enum DiscretizationTransform<'a> {
-        /// The identity transform
-        Identity,
-
-        /// The Transform is a pure homogeneous scale
-        Scale(f32),
-
-        /// The transform is non-homogeneous scale
-        NonHomogeneousScale(Mat2f),
-
-        /// The transform is an affine transform
-        Affine {
-            linear: Mat2f,
-            translation: Vec2f,
-        },
-
-        // The transform is a general transform that preserves lines
-        GeneralLinesPreserving(&'a dyn Fn(Vec2f) -> Vec2f),
-
-        // The transform is a general transform
-        General(&'a dyn Fn(Vec2f) -> Vec2f),
-    }
-
-    impl<'a> DiscretizationTransform<'a> {
-        /// Applies the transform to a point
-        pub fn eval(&self, point: Vec2f) -> Vec2f {
-            match self {
-                DiscretizationTransform::Identity => point,
-                DiscretizationTransform::Scale(scale) => point * *scale,
-                DiscretizationTransform::NonHomogeneousScale(linear) => linear * point,
-                DiscretizationTransform::Affine {
-                    linear,
-                    translation,
-                } => linear * point + *translation,
-                DiscretizationTransform::GeneralLinesPreserving(transform) => transform(point),
-                DiscretizationTransform::General(transform) => transform(point),
-            }
-        }
-
-        pub fn is_line_preserving(&self) -> bool {
-            match self {
-                DiscretizationTransform::Identity => true,
-                DiscretizationTransform::Scale(_) => true,
-                DiscretizationTransform::NonHomogeneousScale(_) => true,
-                DiscretizationTransform::Affine { .. } => true,
-                DiscretizationTransform::GeneralLinesPreserving(_) => true,
-                DiscretizationTransform::General(_) => false,
-            }
-        }
-    }
+    
 
     /// This is used to perform the discretization of a path.
     ///
@@ -550,16 +500,16 @@ pub mod discretization {
     ///    // do something ...
     /// }
     /// ```
-    pub struct PathDiscretizer<'t> {
+    pub struct PathDiscretizer {
         /// The discretization parameters.
         params: DiscretizationParams,
         /// transform to apply to the curve
-        transform: DiscretizationTransform<'t>,
+        transform: Transform2d,
     }
 
-    impl<'t> PathDiscretizer<'t> {
+    impl PathDiscretizer {
         /// Creates a new path discretizer for the given parameters and transform.
-        pub fn new(params: DiscretizationParams, transform: DiscretizationTransform<'t>) -> Self {
+        pub fn new(params: DiscretizationParams, transform: Transform2d) -> Self {
             Self { params, transform }
         }
 
@@ -567,7 +517,7 @@ pub mod discretization {
         pub fn discretize<'i, 'a>(
             &'a self,
             path: &'i mut dyn Iterator<Item = &'i PathCommand>,
-        ) -> PathDiscretizerIterator<'i, 't, 'a> {
+        ) -> PathDiscretizerIterator<'i, 'a> {
             PathDiscretizerIterator {
                 discretizer: self,
                 path,
@@ -579,16 +529,16 @@ pub mod discretization {
     /// Iterates through a path and discretizes it.
     ///
     /// This is not intended to be used directly, use [`PathDiscretizer::discretize`] instead.
-    pub struct PathDiscretizerIterator<'i: 'a, 't: 'a, 'a> {
+    pub struct PathDiscretizerIterator<'i: 'a, 'a> {
         /// The discretizer that created this iterator.
-        discretizer: &'a PathDiscretizer<'t>,
+        discretizer: &'a PathDiscretizer,
         /// The path to discretize.
         path: &'i mut dyn Iterator<Item = &'i PathCommand>,
         /// The current state of the discretization.
         state: PathDiscretizationState<'a>,
     }
 
-    impl<'i, 't, 'here> Iterator for PathDiscretizerIterator<'i, 't, 'here> {
+    impl<'i, 'here> Iterator for PathDiscretizerIterator<'i, 'here> {
         type Item = BrokenPolylineCommand;
 
         fn next(&mut self) -> Option<Self::Item> {
@@ -990,20 +940,20 @@ pub mod discretization {
     /// At the moment, the generated points just lie on the curve. In the future, we may want to
     /// generate points that may not lie on the curve, but are within the given accuracy.
     /// to minimize the error across the intermediate points.
-    pub struct ParametricCurveDiscretizerIterator<'t, 'a> {
+    pub struct ParametricCurveDiscretizerIterator<'a> {
         curve: Box<dyn ParametricCurve>,
         params: &'a DiscretizationParams,           // TODO reference
-        transform: &'a DiscretizationTransform<'t>, // TODO reference
+        transform: &'a Transform2d, // TODO reference
         skip_first: bool,
         initial_subs: u32,
         state: Option<ParametricCurveDiscretizerState>,
     }
 
-    impl<'t, 'a> ParametricCurveDiscretizerIterator<'t, 'a> {
+    impl<'a> ParametricCurveDiscretizerIterator<'a> {
         pub fn new(
             curve: Box<dyn ParametricCurve>,
             params: &'a DiscretizationParams,
-            transform: &'a DiscretizationTransform<'t>,
+            transform: &'a Transform2d,
             skip_first: bool,
             initial_subs: u32,
         ) -> Self {
@@ -1078,7 +1028,7 @@ pub mod discretization {
         finished: bool, // TODO this is unnecessary, maybe we could set to a value that is past the end of the curve to indicate that it is finished?
     }
 
-    impl<'t, 'a> Iterator for ParametricCurveDiscretizerIterator<'t, 'a> {
+    impl<'a> Iterator for ParametricCurveDiscretizerIterator<'a> {
         type Item = Vec2f;
 
         fn next(&mut self) -> Option<Self::Item> {
@@ -1289,7 +1239,7 @@ pub mod discretization {
             p1: Vec2f,
             skip_first: bool,
             params: &'a DiscretizationParams,
-            transform: &'a DiscretizationTransform<'t>,
+            transform: &'a Transform2d,
         ) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
             if transform.is_line_preserving() {
                 let p0_primed = transform.eval(p0);
@@ -1355,7 +1305,7 @@ pub mod discretization {
             p3: Vec2f,
             skip_first: bool,
             params: &'a DiscretizationParams,
-            transform: &'a DiscretizationTransform<'t>,
+            transform: &'a Transform2d,
         ) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
             const DEGREE: u32 = 3;
             let curve = ParametricCubic2dBezier::new(p0, p1, p2, p3);
@@ -1409,7 +1359,7 @@ pub mod discretization {
             p2: Vec2f,
             skip_first: bool,
             params: &'a DiscretizationParams,
-            transform: &'a DiscretizationTransform<'t>,
+            transform: &'a Transform2d,
         ) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
             const DEGREE: u32 = 2;
             let curve = ParametricQuadratic2dBezier::new(p0, p1, p2);
@@ -1572,7 +1522,7 @@ pub mod discretization {
             p1: Vec2f,
             skip_first: bool,
             params: &'a DiscretizationParams,
-            transform: &'a DiscretizationTransform<'t>,
+            transform: &'a Transform2d,
         ) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
             let arc = endpoint_to_center_parametric_arc_function(
                 radii,

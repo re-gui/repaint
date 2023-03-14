@@ -3,3 +3,7 @@ pub mod defs;
 pub mod rasterization;
 pub mod shapes;
 pub mod blending;
+pub mod paint;
+pub mod pen;
+pub mod transform;
+pub mod brush;

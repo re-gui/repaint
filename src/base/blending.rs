@@ -314,6 +314,12 @@ impl BlendMode {
     }
 }
 
+impl Default for BlendMode {
+    fn default() -> Self {
+        BlendMode::SrcOver
+    }
+}
+
 /// Implementation of the blend modes.
 pub mod modes_impl {
     //use super::*;

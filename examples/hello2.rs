@@ -1,3 +1,5 @@
+use repaint::base::transform::Transform2d;
+
 fn main() {
     println!("Hello from an example!");
 
@@ -76,7 +78,7 @@ fn main() {
     params.max_angle = 1.1;
     let discretizer = pp::discretization::PathDiscretizer::new(
         params,
-        pp::discretization::DiscretizationTransform::Identity,
+        Transform2d::Identity,
     );
     let mut it = path.iter();
     let discr_commands_iter = discretizer.discretize(&mut it);

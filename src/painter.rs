@@ -7,51 +7,41 @@ Provides the [`Painter`] trait.
 use crate::base::blending::BlendMode;
 //use crate::canvas::Canvas;
 use crate::base::defs::antialiasing::AntialiasMode;
+use crate::base::defs::rect::{FRect, VideoRect};
+use crate::base::paint::Paint;
+use crate::base::pen::Pen;
+use crate::base::shapes::path::PathCommand;
+
+use nalgebra as na;
+type Vec2f = na::Vector2<f32>;
+type Vec2i32 = na::Vector2<i32>;
 
 /// A painter that can be used to draw on a [`Canvas`](`crate::canvas::Canvas`).
 /// 
 /// In order to organize the drawing process, the painter
 /// trait is split into conceptually separate parts that provide
 /// different functionality:
-///  - [`WithBlendMode`] contains the methods related to blend modes
-pub trait Painter: BlendModeMethods + AntialiasMethods {
+///  - [`BlendModeMethods`] contains the methods related to blend modes
+///  - [`AntialiasMethods`] contains the methods related to antialiasing
+///  - [`TransformMethods`] contains the methods related to transformations
+///  - [`ClippingMethods`] contains the methods related to clipping
+///  - [`StrokingMethods`] contains the methods related to stroking
+///  - [`FillingMethods`] contains the methods related to filling shapes
+///  - [`BasicShapesMethods`] contains basic shapes
+pub trait Painter: BlendModeMethods + AntialiasMethods + TransformMethods + ClippingMethods + StrokingMethods + FillingMethods + BasicShapesMethods {
 }
 
 /// Methods related to blend modes.
 pub trait BlendModeMethods {
 
-    /// Returns whether this painter supports blend modes.
-    /// 
-    /// If this method returns `false`, all other methods related to blend modes
-    /// will have no effect.
-    /// 
-    /// Default implementation returns `false`.
-    fn has_blend_mode(&self) -> bool {
-        false
-    }
-
     /// Returns whether this painter can set the given blend mode.
-    fn can_set_blend_mode(&self, _mode: BlendMode) -> bool {
-        self.has_blend_mode()
-    }
-
-    /// Returns the current blend mode.
-    fn blend_mode(&self) -> BlendMode {
-        BlendMode::SrcOver
-    }
-
-    /// Sets the blend mode. If the given blend mode is not supported by this painter,
-    /// the effective blend mode will be undefined, probably the default blend mode.
-    /// 
-    /// When an invalid blend mode is set, the painter will not panic, and it will behave like
-    /// any other blend mode respect to the push/pop? state.
-    fn set_blend_mode(&mut self, _mode: BlendMode) {
-        // ...
+    fn is_blend_mode_valid(&self, _mode: BlendMode) -> bool {
+        false
     }
 
     /// Returns an iterator over all valid blend modes.
     fn enumerate_valid_blend_modes<'s>(&'s self) -> Box<dyn Iterator<Item = BlendMode> + 's> {
-        Box::new(BlendMode::enumerate_all().filter(move |mode| self.can_set_blend_mode(*mode)))
+        Box::new(BlendMode::enumerate_all().filter(move |mode| self.is_blend_mode_valid(*mode)))
     }
 }
 
@@ -91,3 +81,68 @@ pub trait AntialiasMethods {
     }
 }
 
+pub trait TransformMethods {
+}
+
+pub trait ClippingMethods {
+}
+
+pub trait StrokingMethods: TransformMethods + ClippingMethods {
+
+    fn can_stroke(&self) -> bool {
+        false
+    }
+
+    /// Draw a point at `pos`.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `pos` - The position of the point to draw.
+    /// * `paint` - Pa to use for drawing the point.
+    fn draw_point(&mut self, pos: Vec2f, paint: &Paint);
+
+    /// Draw a line from `start` to `end`.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `start` - The start position of the line.
+    /// * `end` - The end position of the line.
+    /// * `pen` - pen to use for drawing the line.
+    fn stroke_line(&mut self, start: Vec2f, end: Vec2f, pen: &Pen);
+
+    /// Stroke a path.
+    /// 
+    /// # Arguments
+    /// 
+    /// * `path` - iterator over the path commands.
+    /// * `pen` - pen to use for drawing the path.
+    fn stroke_path(&mut self, path: &mut dyn Iterator<Item = &PathCommand>, pen: &Pen);
+}
+
+pub trait FillingMethods: TransformMethods + ClippingMethods {
+    fn fill_path(&mut self, path: &mut dyn Iterator<Item = &PathCommand>, ink: &Paint);
+}
+
+pub trait BasicShapesMethods: StrokingMethods + FillingMethods {
+    /// Draw a rectangle.
+    fn stroke_rect(&mut self, rect: FRect, pen: &Pen) {
+        self.stroke_path(&mut rect_to_path(rect).iter(), pen);
+    }
+
+    /// Fill a rectangle.
+    fn fill_rect(&mut self, rect: FRect, ink: &Paint) {
+        self.fill_path(&mut rect_to_path(rect).iter(), ink);
+    }
+}
+
+
+/// Convert a rectangle to a path.
+fn rect_to_path(rect: FRect) -> [PathCommand; 5] {
+    [
+        PathCommand::MoveTo(rect.top_left()),
+        PathCommand::LineTo(rect.top_right()),
+        PathCommand::LineTo(rect.bottom_right()),
+        PathCommand::LineTo(rect.bottom_left()),
+        PathCommand::ClosePath,
+    ]
+}
