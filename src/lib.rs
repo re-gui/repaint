@@ -36,3 +36,6 @@ pub mod base;
 pub mod utils;
 pub mod canvas;
 pub mod painter;
+
+pub use canvas::Canvas;
+pub use painter::Painter;

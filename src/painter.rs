@@ -15,7 +15,7 @@ use crate::base::shapes::path::PathCommand;
 use crate::base::defs::linalg::*;
 
 /// A painter that can be used to draw on a [`Canvas`](`crate::canvas::Canvas`).
-/// 
+///
 /// In order to organize the drawing process, the painter
 /// trait is split into conceptually separate parts that provide
 /// different functionality:
