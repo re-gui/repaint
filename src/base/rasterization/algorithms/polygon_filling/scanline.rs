@@ -4,7 +4,7 @@ use na::Vector2;
 
 use crate::{base::defs::rect::Rect, base::shapes::polyline::BrokenPolylineCommand};
 
-type Vec2f = na::Vector2<f32>;
+use crate::base::defs::linalg::*;
 
 /*struct LineSpan {
     start_index: usize,
@@ -267,8 +267,8 @@ struct F32 {
 
 impl Eq for F32 {}
 
-impl Ord for F32 {
+/*impl Ord for F32 {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         self.partial_cmp(other).unwrap()
     }
-}
+}*/

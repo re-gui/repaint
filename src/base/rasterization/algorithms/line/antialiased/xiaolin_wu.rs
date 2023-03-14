@@ -1,5 +1,4 @@
-use nalgebra as na;
-type Vec2f = na::Vector2<f32>;
+use crate::base::defs::linalg::*;
 
 pub fn line<F: FnMut(u32, u32, f32) -> ()>(start: &Vec2f, end: &Vec2f, plot: &mut F) -> () {
     // https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm

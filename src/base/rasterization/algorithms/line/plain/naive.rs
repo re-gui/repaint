@@ -1,12 +1,9 @@
-use nalgebra as na;
 
 use crate::base::{
     clipping::clip_line,
     defs::rect::{FRect, Rect},
 };
-type Vec2f = na::Vector2<f32>;
-type Vec2u = na::Vector2<u32>;
-type Vec2i = na::Vector2<i32>;
+use crate::base::defs::linalg::*;
 
 /// Draw a line from `start` to `end` using the Bresenham? algorithm.
 ///
@@ -40,8 +37,8 @@ pub fn line<F: FnMut(u32, u32) -> ()>(
     };
 
     if let Some((clipped_start, clipped_end)) = clip_line(&start, &end, &f_rect) {
-        let sanitize_vec = |v: Vec2f| -> Vec2u {
-            Vec2u::new(
+        let sanitize_vec = |v: Vec2f| -> Vec2u32 {
+            Vec2u32::new(
                 (v.x.max(0.0).round() as u32)
                     .max(rect.min.x)
                     .min(rect.max.x),
@@ -60,11 +57,11 @@ pub fn line<F: FnMut(u32, u32) -> ()>(
             return;
         }
 
-        let delta = Vec2i::new(end.x as i32 - start.x as i32, end.y as i32 - start.y as i32);
+        let delta = Vec2i32::new(end.x as i32 - start.x as i32, end.y as i32 - start.y as i32);
         let steep = delta.y.abs() > delta.x.abs();
 
         if !steep {
-            let (start, end): (Vec2u, Vec2u) = if start.x < end.x {
+            let (start, end): (Vec2u32, Vec2u32) = if start.x < end.x {
                 (start.clone(), end.clone())
             } else {
                 (end.clone(), start.clone())
@@ -77,7 +74,7 @@ pub fn line<F: FnMut(u32, u32) -> ()>(
                 plot(x, y);
             }
         } else {
-            let (start, end): (Vec2u, Vec2u) = if start.y < end.y {
+            let (start, end): (Vec2u32, Vec2u32) = if start.y < end.y {
                 (start.clone(), end.clone())
             } else {
                 (end.clone(), start.clone())

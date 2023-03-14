@@ -27,7 +27,7 @@ fn main() {
     use pp::PathCommand as pc;
     use repaint::base::shapes::path as pp;
     use repaint::base::shapes::polyline as pl;
-    type Vec2f = nalgebra::Vector2<f32>;
+    use repaint::base::defs::linalg::*;
 
     let path: Vec<pp::PathCommand> = vec![
         pc::MoveTo(Vec2f::new(0.0, 0.0)),

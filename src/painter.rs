@@ -12,9 +12,7 @@ use crate::base::paint::Paint;
 use crate::base::pen::Pen;
 use crate::base::shapes::path::PathCommand;
 
-use nalgebra as na;
-type Vec2f = na::Vector2<f32>;
-type Vec2i32 = na::Vector2<i32>;
+use crate::base::defs::linalg::*;
 
 /// A painter that can be used to draw on a [`Canvas`](`crate::canvas::Canvas`).
 /// 

@@ -1,5 +1,4 @@
-type Vec2f = nalgebra::Vector2<f32>;
-type Mat2f = nalgebra::Matrix2<f32>;
+use crate::base::defs::linalg::*;
 
 /// A command for a path.
 ///
@@ -720,7 +719,7 @@ pub mod discretization {
                             &self.discretizer.transform,
                         );
                         self.state
-                            .set_current_pos_and_ctrl_pt(&end_pt, &control_pt_2);
+                            .set_current_pos_and_ctrl_pt(end_pt, control_pt_2);
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
                     }

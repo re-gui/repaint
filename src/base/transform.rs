@@ -1,6 +1,5 @@
 
-pub type Vec2f = nalgebra::Vector2<f32>;
-pub type Mat2f = nalgebra::Matrix2<f32>;
+use crate::base::defs::linalg::*;
 
 //#[derive(Clone, Copy)]
 pub enum Transform2d {

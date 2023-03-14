@@ -3,7 +3,7 @@ use crate::base::defs::rect::FRect;
 use na::Vector2;
 use nalgebra as na;
 
-type Vec2f = na::Vector2<f32>;
+use crate::base::defs::linalg::*;
 
 /// Clip a rectangle to another rectangle. Returns `None` if the rectangle is completely outside the clip rectangle.
 pub fn clip_rect(rect: &FRect, clip_rect: &FRect) -> Option<FRect> {

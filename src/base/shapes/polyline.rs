@@ -1,4 +1,4 @@
-type Vec2f = nalgebra::Vector2<f32>;
+use crate::base::defs::linalg::*;
 
 /// A command for a broken polyline, i.e. multiple detached polylines.
 #[derive(Clone, Copy, Debug)]

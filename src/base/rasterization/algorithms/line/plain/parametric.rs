@@ -1,5 +1,4 @@
-use nalgebra as na;
-type Vec2f = na::Vector2<f32>;
+use crate::base::defs::linalg::*;
 
 /// Originally written by copilot.
 /// Produces artifacts, maybe it is better to use [`super::naive::line`] instead.
