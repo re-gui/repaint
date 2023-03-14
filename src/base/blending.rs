@@ -1,99 +1,101 @@
+/*!
+Blending and compositing.
+
+# Blending
+
+The term "*blending*" is used to describe the process of combining the source and destination colors. We want to maintain consistency with the [w3 definition](https://www.w3.org/TR/compositing-1/#blending) which states that:
+> [**Blending**](https://www.w3.org/TR/compositing-1/#blending) is the aspect of [compositing](https://www.w3.org/TR/compositing-1/#whatiscompositing) that calculates the mixing of colors where the source element and [backdrop](https://www.w3.org/TR/compositing-1/#backdropCalc) overlap.
+
+As such, the process of blending only applies to the overlapping area of the source and destination, the rest of the destination is left untouched.
+
+## General formula for Compositing and Blending
+
+Some of the blend modes can be expressed as a general formula (algorithm) for compositing and blending, which is, as defined by [w3](https://www.w3.org/TR/compositing-1/#generalformula):
+ 1. apply *blend in place*:
+   <tex-math>
+     s_C \leftarrow (1 - b_\alpha) \cdot s_C + b_\alpha \cdot B(b_C, s_C)
+   </tex-math>
+ 2. apply *composite* (maybe alpha compositing???):
+   <tex-math>
+     r_C \leftarrow s_\alpha \cdot F_a \cdot s_C + b_\alpha \cdot F_b \cdot b_C
+   </tex-math>
+
+ where:
+  - <i-math>B</i-math> is the *mixing function* (aka *blend function*)
+  - <i-math>F_a</i-math> and <i-math>F_b</i-math> are defined by the Peter Duff operator in use
+
+Also, the [*simple alpha compositing*](https://www.w3.org/TR/compositing-1/#simplealphacompositing) formula is:
+ - <i-math>r_c = s_C \\, s_\alpha + b_C \\, b_\alpha \\, (1 - s_\alpha) = s_c + b_c \\, (1 - s_\alpha)</i-math>
+ - <i-math>r_\alpha = s_\alpha + b_\alpha \\, (1 - s_\alpha)</i-math>
+ - <i-math>r_C = r_c / r_\alpha</i-math>
+
+## Standard Blending Formula
+
+We define a standard blending formula (see [this formula](https://www.w3.org/TR/compositing-1/#blending)) that is used by some of the blend modes using the [general formula](#general-formula-for-compositing-and-blending) above:
+ 1. use the simple alpha compositing formula to calculate the result color and alpha:
+   <tex-math>
+   \begin{aligned}
+     r_c &= s_c + b_c \\, (1 - s_\alpha) = s_C \\, s_\alpha + b_C \\, b_\alpha \\, (1 - s_\alpha)\\\\\
+     r_\alpha &= s_\alpha + b_\alpha \\, (1 - s_\alpha)
+   \end{aligned}
+   </tex-math>
+ 2. substitute the result of the *blend in place* step in the *composite* step:
+   <tex-math>
+   \begin{aligned}
+    r_c &= s_\alpha \\, ((1 - b_\alpha) s_C + b_\alpha \\, B(b_C, s_C)) + b_\alpha \\, b_C \\, (1 - s_\alpha) \\\\
+        &= s_\alpha \\, (1 - b_\alpha) s_C + s_\alpha \\, b_\alpha \\, B(b_C, s_C) + b_\alpha \\, b_C \\, (1 - s_\alpha)
+   \end{aligned}
+   </tex-math>
+
+### Example
+
+In the [normal](`BlendMode::SrcOver`) blending mode, the *mixing function* is:
+<tex-math>
+  B(b_C, s_C) = s_C
+</tex-math>
+this means that the resulting color is:
+<tex-math>
+\begin{aligned}
+r_c &= s_\alpha \\, (1 - b_\alpha) s_C + s_\alpha \\, b_\alpha \\, B(b_C, s_C) + b_\alpha \\, b_C \\, (1 - s_\alpha) \\\\
+    &= s_\alpha \\, (1 - b_\alpha) s_C + s_\alpha \\, b_\alpha \\, s_C + b_\alpha \\, b_C \\, (1 - s_\alpha) \\\\
+    %&= s_\alpha s_C - s_\alpha b_\alpha s_C + s_\alpha b_\alpha s_C + b_\alpha b_C - s_\alpha b_\alpha b_C \\\\
+    %&= s_\alpha s_C + b_\alpha b_C - s_\alpha b_\alpha b_C \\\\
+    %&= s_\alpha s_C + (b_\alpha - s_\alpha b_\alpha) b_C \\\\
+    &= s_c + (1 - s_\alpha) b_c
+\end{aligned}
+</tex-math>
+that is the [`BlendMode::SrcOver`] blend mode.
+
+# Notes
+
+To keep [Skia](https://skia.org/docs/user/api/skblendmode_overview/) and [w3](https://skia.org/docs/user/api/skblendmode_overview/) nomenclature:
+ - `s` is the **source** color and alpha (all components)
+ - `d` (or `b`) is the **destination** (or **backdrop**) color and alpha (all components)
+ - `r` is the **result** color and alpha (all components)
+ - `*_a` is the **alpha** component of the color
+ - `*_C` is the **color** channel component of the color
+ - `*_c` is the **premultiplied color** channel component of the color, i.e. `C * a`, `C = c / a`
+
+All components are real numbers in the range <i-math>[0, 1]</i-math>.
+
+# References
+- <https://www.w3.org/TR/compositing-1/>
+- <https://skia.org/docs/user/api/skblendmode_overview/>
+- <https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode>
+- <https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation>
+- <https://graphics.pixar.com/library/Compositing/paper.pdf>
+- <https://en.wikipedia.org/wiki/Blend_modes>
+*/
 
 use strum::{EnumIter, IntoEnumIterator};
-
 
 /// A blend mode is a function that combines a *source* color with a *destination* color to produce a new color.
 /// 
 /// The **source** is the color that is being drawn on the canvas, while the **destination** is the color that is already present on the canvas (same as **backdrop** in this context).
 /// 
-/// It is advised to read [this article](https://www.w3.org/TR/compositing-1/) to understand the concept of blending and the different blend modes.
+/// It is advised to read [this article](https://www.w3.org/TR/compositing-1/#blending) to understand the concept of blending and the different blend modes.
 /// 
-/// ## Blending
-/// 
-/// The term "*blending*" is used to describe the process of combining the source and destination colors. We want to maintain consistency with the [w3 definition](https://www.w3.org/TR/compositing-1/#blending) which states that:
-/// > [**Blending**](https://www.w3.org/TR/compositing-1/#blending) is the aspect of [compositing](https://www.w3.org/TR/compositing-1/#whatiscompositing) that calculates the mixing of colors where the source element and [backdrop](https://www.w3.org/TR/compositing-1/#backdropCalc) overlap.
-/// 
-/// As such, the process of blending only applies to the overlapping area of the source and destination, the rest of the destination is left untouched.
-/// 
-/// ### General formula for Compositing and Blending
-/// 
-/// Some of the blend modes can be expressed as a general formula (algorithm) for compositing and blending, which is, as defined by [w3](https://www.w3.org/TR/compositing-1/#generalformula):
-///  1. apply *blend in place*:
-///    <tex-math>
-///      s_C \leftarrow (1 - b_\alpha) \cdot s_C + b_\alpha \cdot B(b_C, s_C)
-///    </tex-math>
-///  2. apply *composite* (maybe alpha compositing???):
-///    <tex-math>
-///      r_C \leftarrow s_\alpha \cdot F_a \cdot s_C + b_\alpha \cdot F_b \cdot b_C
-///    </tex-math>
-/// 
-///  where:
-///   - <i-math>B</i-math> is the *mixing function* (aka *blend function*)
-///   - <i-math>F_a</i-math> and <i-math>F_b</i-math> are defined by the Peter Duff operator in use
-/// 
-/// Also, the [*simple alpha compositing*](https://www.w3.org/TR/compositing-1/#simplealphacompositing) formula is:
-///  - <i-math>r_c = s_C \\, s_\alpha + b_C \\, b_\alpha \\, (1 - s_\alpha) = s_c + b_c \\, (1 - s_\alpha)</i-math>
-///  - <i-math>r_\alpha = s_\alpha + b_\alpha \\, (1 - s_\alpha)</i-math>
-///  - <i-math>r_C = r_c / r_\alpha</i-math>
-/// 
-/// ### Standard Blending Formula
-/// 
-/// We define a standard blending formula (see [this formula](https://www.w3.org/TR/compositing-1/#blending)) that is used by some of the blend modes using the [general formula](#general-formula-for-compositing-and-blending) above:
-///  1. use the simple alpha compositing formula to calculate the result color and alpha:
-///    <tex-math>
-///    \begin{aligned}
-///      r_c &= s_c + b_c \\, (1 - s_\alpha) = s_C \\, s_\alpha + b_C \\, b_\alpha \\, (1 - s_\alpha)\\\\\
-///      r_\alpha &= s_\alpha + b_\alpha \\, (1 - s_\alpha)
-///    \end{aligned}
-///    </tex-math>
-///  2. substitute the result of the *blend in place* step in the *composite* step:
-///    <tex-math>
-///    \begin{aligned}
-///     r_c &= s_\alpha \\, ((1 - b_\alpha) s_C + b_\alpha \\, B(b_C, s_C)) + b_\alpha \\, b_C \\, (1 - s_\alpha) \\\\
-///         &= s_\alpha \\, (1 - b_\alpha) s_C + s_\alpha \\, b_\alpha \\, B(b_C, s_C) + b_\alpha \\, b_C \\, (1 - s_\alpha)
-///    \end{aligned}
-///    </tex-math>
-/// 
-/// #### Example
-/// 
-/// In the [normal](`BlendMode::SrcOver`) blending mode, the *mixing function* is:
-/// <tex-math>
-///   B(b_C, s_C) = s_C
-/// </tex-math>
-/// this means that the resulting color is:
-/// <tex-math>
-/// \begin{aligned}
-/// r_c &= s_\alpha \\, (1 - b_\alpha) s_C + s_\alpha \\, b_\alpha \\, B(b_C, s_C) + b_\alpha \\, b_C \\, (1 - s_\alpha) \\\\
-///     &= s_\alpha \\, (1 - b_\alpha) s_C + s_\alpha \\, b_\alpha \\, s_C + b_\alpha \\, b_C \\, (1 - s_\alpha) \\\\
-///     %&= s_\alpha s_C - s_\alpha b_\alpha s_C + s_\alpha b_\alpha s_C + b_\alpha b_C - s_\alpha b_\alpha b_C \\\\
-///     %&= s_\alpha s_C + b_\alpha b_C - s_\alpha b_\alpha b_C \\\\
-///     %&= s_\alpha s_C + (b_\alpha - s_\alpha b_\alpha) b_C \\\\
-///     &= s_c + (1 - s_\alpha) b_c
-/// \end{aligned}
-/// </tex-math>
-/// that is the [`BlendMode::SrcOver`] blend mode.
-/// 
-/// ## Notes
-/// 
-/// To keep [Skia](https://skia.org/docs/user/api/skblendmode_overview/) and [w3](https://skia.org/docs/user/api/skblendmode_overview/) nomenclature:
-///  - `s` is the **source** color and alpha (all components)
-///  - `d` (or `b`) is the **destination** (or **backdrop**) color and alpha (all components)
-///  - `r` is the **result** color and alpha (all components)
-///  - `*_a` is the **alpha** component of the color
-///  - `*_C` is the **color** channel component of the color
-///  - `*_c` is the **premultiplied color** channel component of the color, i.e. `C * a`, `C = c / a`
-/// 
-/// All components are real numbers in the range <i-math>[0, 1]</i-math>.
-/// 
-/// ## References
-/// - <https://www.w3.org/TR/compositing-1/#blending>
-/// - <https://skia.org/docs/user/api/skblendmode_overview/>
-/// - <https://developer.mozilla.org/en-US/docs/Web/CSS/mix-blend-mode>
-/// - <https://developer.mozilla.org/en-US/docs/Web/API/CanvasRenderingContext2D/globalCompositeOperation>
-/// - <https://graphics.pixar.com/library/Compositing/paper.pdf>
-/// - <https://en.wikipedia.org/wiki/Blend_modes>
-/// 
-/// TODO LATEX EQUATIONS
+/// See [the module documentation](crate::base::blending) for more information.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
 pub enum BlendMode {
     /// `r = 0`
@@ -101,7 +103,7 @@ pub enum BlendMode {
     /// The source is discarded where it overlaps the destination, effectively "erasing" the destination.
     Clear,
 
-    /// `r = s`, aka "copy", "normal", "replace", "source"
+    /// `r = s`, aka ***copy***, *replace*, *source*
     /// 
     /// The source is drawn over the destination, replacing the destination.
     Src,
@@ -112,7 +114,7 @@ pub enum BlendMode {
     /// The destination is the result color. In most cases this means that the source is not drawn at all.
     Dst,
 
-    /// AKA **normal** or "simple alpha composing"
+    /// AKA ***normal*** or "*simple alpha composing*"
     /// 
     /// The output of this mode satisfies the following equations:
     /// <tex-math>

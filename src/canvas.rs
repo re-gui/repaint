@@ -6,9 +6,11 @@ In this module we define the [`Canvas`] trait that represents a drawing surface 
 
 */
 
-use std::ops::{Deref, DerefMut};
+use std::{ops::{Deref, DerefMut}, error::Error, fmt::Display};
 
-use crate::painter::Painter;
+use strum::Display;
+
+use crate::{painter::Painter, base::shapes::Shape};
 
 
 
@@ -37,12 +39,18 @@ pub trait Canvas {
             Err(GetPainterError::Unknown)
         }
     }
+
+    // TODO
+    fn shape(&self) -> Shape;
 }
 
+#[derive(Debug, Display)]
 pub enum GetPainterError {
     Unknown,
     OnlyOnePainterAllowed,
 }
+
+impl Error for GetPainterError {}
 
 /// A finite set of known painters that can be uses to try to reduce boxing while still allowing dynamic dispatch.
 pub enum CompactPainter<'a> {
