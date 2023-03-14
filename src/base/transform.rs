@@ -51,7 +51,7 @@ impl Transform2d {
         }
     }
 
-    // tells if the transform preserves lines
+    /// Tells if the transform preserves lines.
     pub fn is_line_preserving(&self) -> bool {
         match self {
             Transform2d::Identity => true,
@@ -63,4 +63,51 @@ impl Transform2d {
             Transform2d::General(_) => false,
         }
     }
+
+    /// Returns the linear part and the translation part of the transform
+    /// if the transform is affine.
+    pub fn to_affine(&self) -> Option<(Mat2f, Vec2f)> {
+        match self {
+            Transform2d::Identity => Some((
+                Mat2f::identity(),
+                Vec2f::zeros()
+            )),
+            Transform2d::Scale(scale) => Some((
+                scaling_matrix2(*scale, *scale),
+                Vec2f::zeros()
+            )),
+            Transform2d::XYScale {
+                x_factor,
+                y_factor,
+            } => Some((
+                //Mat2f::new_nonuniform_scaling(&Vec2f::new(*x_factor, *y_factor)),
+                scaling_matrix2(*x_factor, *y_factor),
+                Vec2f::zeros(),
+            )),
+            Transform2d::NonHomogeneousScale(linear) => Some((
+                *linear,
+                Vec2f::zeros()
+            )),
+            Transform2d::Affine {
+                linear,
+                translation,
+            } => Some((
+                *linear,
+                *translation
+            )),
+            Transform2d::GeneralLinesPreserving(_) => None,
+            Transform2d::General(_) => None,
+        }
+    }
+
+    pub fn inverse(&self) -> Option<Transform2d> {
+        unimplemented!()
+    }
+}
+
+fn scaling_matrix2(x_scale: f32, y_scale: f32) -> Mat2f {
+    let mut m = Mat2f::zeros();
+    m[(0, 0)] = x_scale;
+    m[(1, 1)] = y_scale;
+    m
 }

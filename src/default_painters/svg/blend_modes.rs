@@ -1,4 +1,4 @@
-use strum::Display;
+use strum::{Display, EnumIter};
 
 use crate::base::blending::BlendMode;
 
@@ -24,7 +24,7 @@ use crate::base::blending::BlendMode;
 /// ```
 /// 
 /// [`BlendMode`]: crate::base::blending::BlendMode
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Display, EnumIter)]
 pub enum SvgBlendMode {
     // Keyword values
 

@@ -6,7 +6,7 @@ In this module we define the [`Canvas`] trait that represents a drawing surface 
 
 */
 
-use std::{ops::{Deref, DerefMut}, error::Error, fmt::Display};
+use std::{ops::{Deref, DerefMut}, error::Error};
 
 use strum::Display;
 

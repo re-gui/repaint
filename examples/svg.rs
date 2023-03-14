@@ -1,4 +1,4 @@
-use std::error::Error;
+use std::{error::Error, path::Path};
 
 use repaint::{base::defs::{rect::FRect, linalg::Vec2f}, Canvas};
 
@@ -18,7 +18,9 @@ pub fn main() -> Result<(), Box<dyn Error>> {
         
     }
 
-    svg.save()?;
+    svg.save(Path::new("test.svg"))?;
+
+    println!("Goodbye!");
 
 
     Ok(())
