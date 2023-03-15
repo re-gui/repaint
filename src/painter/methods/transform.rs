@@ -4,8 +4,7 @@ use strum::Display;
 
 use crate::{Painter, base::{transform::Transform2d, shapes::Shape}};
 
-
-
+#[cfg_attr(doc, katexit::katexit)]
 /// Methods related to transformations and clipping.
 pub trait TransformMethods {
     fn with_save(&mut self, f: &mut dyn FnOnce(&mut dyn Painter));
