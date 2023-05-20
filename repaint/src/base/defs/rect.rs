@@ -3,10 +3,11 @@ use std::ops::{Add, AddAssign, Sub, SubAssign};
 use na::Vector2;
 use nalgebra as na;
 
-pub type FRect = Rect<f32>;
+pub type F32Rect = Rect<f32>;
+pub type F64Rect = Rect<f64>;
 
 /// This is a rectangle with a min and max point.
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, PartialEq)]
 pub struct Rect<T>
 where
     T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + PartialOrd,

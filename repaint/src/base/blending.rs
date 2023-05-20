@@ -311,6 +311,7 @@ pub enum BlendMode {
 }
 
 impl BlendMode {
+    /// Returns an iterator over all the blend modes.
     pub fn enumerate_all() -> impl Iterator<Item = BlendMode> {
         BlendMode::iter()
     }

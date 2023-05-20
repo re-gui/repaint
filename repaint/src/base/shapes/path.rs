@@ -8,12 +8,13 @@ use crate::base::defs::linalg::*;
 /// right corner, then drawing a line to the bottom left corner, and finally closing.
 /// It would be represented, for example, by the following commands:
 /// ```rust
-/// PathCommand::MoveTo(Vec2f::new(0.0, 0.0));
-/// PathCommand::LineTo(Vec2f::new(2.0, 0.0));
-/// PathCommand::LineTo(Vec2f::new(2.0, 1.0));
-/// PathCommand::LineTo(Vec2f::new(0.0, 1.0));
+/// PathCommand::MoveTo(Vec2f64::new(0.0, 0.0));
+/// PathCommand::LineTo(Vec2f64::new(2.0, 0.0));
+/// PathCommand::LineTo(Vec2f64::new(2.0, 1.0));
+/// PathCommand::LineTo(Vec2f64::new(0.0, 1.0));
 /// PathCommand::ClosePath;
 /// ```
+#[derive(Clone, Debug, PartialEq)]
 pub enum PathCommand {
     /// Move to a point, effectively starting a new path.
     ///
@@ -23,14 +24,14 @@ pub enum PathCommand {
     /// a [`PathCommand::ClosePath`] command, the path will be implicitly moved to the last point of the previous path.
     ///
     /// TODO ...
-    MoveTo(Vec2f),
+    MoveTo(Vec2f64),
 
     /// Move to a point relative to the current position.
     ///
     /// This command is the same as [`PathCommand::MoveTo`], but the point is relative to the current position.
     ///
     /// TODO ...
-    MoveToOffset(Vec2f),
+    MoveToOffset(Vec2f64),
 
     /// Draw a line to a point.
     ///
@@ -38,14 +39,14 @@ pub enum PathCommand {
     /// is then set to the given point.
     ///
     /// TODO ...
-    LineTo(Vec2f),
+    LineTo(Vec2f64),
 
     /// Draw a line to a point relative to the current position.
     ///
     /// This command is the same as [`PathCommand::LineTo`], but the point is relative to the current position.
     ///
     /// TODO ...
-    LineToOffset(Vec2f),
+    LineToOffset(Vec2f64),
 
     /// Draw a horizontal line to a point.
     ///
@@ -53,14 +54,14 @@ pub enum PathCommand {
     /// is then set to the given point.
     ///
     /// TODO ...
-    HorizontalLineTo(f32),
+    HorizontalLineTo(f64),
 
     /// Draw a horizontal line to a point relative to the current position.
     ///
     /// This command is the same as [`PathCommand::HorizontalLineTo`], but the point is relative to the current position.
     ///
     /// TODO ...
-    HorizontalLineToOffset(f32),
+    HorizontalLineToOffset(f64),
 
     /// Draw a vertical line to a point.
     ///
@@ -68,14 +69,14 @@ pub enum PathCommand {
     /// is then set to the given point.
     ///
     /// TODO ...
-    VerticalLineTo(f32),
+    VerticalLineTo(f64),
 
     /// Draw a vertical line to a point relative to the current position.
     ///
     /// This command is the same as [`PathCommand::VerticalLineTo`], but the point is relative to the current position.
     ///
     /// TODO ...
-    VerticalLineToOffset(f32),
+    VerticalLineToOffset(f64),
 
     /// Close the current path with a straight line.
     ///
@@ -90,11 +91,11 @@ pub enum PathCommand {
     /// TODO ...
     CubicBezierCurveTo {
         /// The first control point.
-        control_pt_1: Vec2f,
+        control_pt_1: Vec2f64,
         /// The second control point.
-        control_pt_2: Vec2f,
+        control_pt_2: Vec2f64,
         /// The end point.
-        end_pt: Vec2f,
+        end_pt: Vec2f64,
     },
 
     /// Draw a cubic Bezier curve to a point relative to the current position.
@@ -102,11 +103,11 @@ pub enum PathCommand {
     /// TODO ...
     CubicBezierCurveToOffset {
         /// The first control point.
-        control_pt_1_offset: Vec2f,
+        control_pt_1_offset: Vec2f64,
         /// The second control point.
-        control_pt_2_offset: Vec2f,
+        control_pt_2_offset: Vec2f64,
         /// The end point.
-        end_pt_offset: Vec2f,
+        end_pt_offset: Vec2f64,
     },
 
     /// Draw a cubic Bezier curve to a point.
@@ -114,9 +115,9 @@ pub enum PathCommand {
     /// TODO ...
     SmoothCubicBezierCurveTo {
         /// The control point.
-        control_pt_2: Vec2f,
+        control_pt_2: Vec2f64,
         /// The end point.
-        end_pt: Vec2f,
+        end_pt: Vec2f64,
     },
 
     /// Draw a cubic Bezier curve to a point relative to the current position.
@@ -124,9 +125,9 @@ pub enum PathCommand {
     /// TODO ...
     SmoothCubicBezierCurveToOffset {
         /// The control point.
-        control_pt_2_offset: Vec2f,
+        control_pt_2_offset: Vec2f64,
         /// The end point.
-        end_pt_offset: Vec2f,
+        end_pt_offset: Vec2f64,
     },
 
     /// Draw a quadratic Bezier curve to a point.
@@ -134,9 +135,9 @@ pub enum PathCommand {
     /// TODO ...
     QuadraticBezierCurveTo {
         /// The control point.
-        control_pt: Vec2f,
+        control_pt: Vec2f64,
         /// The end point.
-        end_pt: Vec2f,
+        end_pt: Vec2f64,
     },
 
     /// Draw a quadratic Bezier curve to a point relative to the current position.
@@ -144,9 +145,9 @@ pub enum PathCommand {
     /// TODO ...
     QuadraticBezierCurveToOffset {
         /// The control point.
-        control_pt_offset: Vec2f,
+        control_pt_offset: Vec2f64,
         /// The end point.
-        end_pt_offset: Vec2f,
+        end_pt_offset: Vec2f64,
     },
 
     /// Draw a quadratic Bezier curve to a point.
@@ -154,32 +155,32 @@ pub enum PathCommand {
     /// The last point is the end point.
     ///
     /// TODO ...
-    SmoothQuadraticBezierCurveTo(Vec2f),
+    SmoothQuadraticBezierCurveTo(Vec2f64),
 
     /// Draw a quadratic Bezier curve to a point relative to the current position.
     ///
     /// The last point is the end point.
     ///
     /// TODO ...
-    SmoothQuadraticBezierCurveToOffset(Vec2f),
+    SmoothQuadraticBezierCurveToOffset(Vec2f64),
 
     /// Draw an elliptical arc to a point.
     ///
     /// See <https://developer.mozilla.org/en-US/docs/Web/SVG/Tutorial/Paths#arcs>
     ///
     /// TODO ...
-    //EllipticalArcTo(f32, f32, f32, bool, bool, Vec2f),
+    //EllipticalArcTo(f64, f64, f64, bool, bool, Vec2f),
     EllipticalArcTo {
         /// The x-axis and y-axis radii of the ellipse.
-        radii: Vec2f,
+        radii: Vec2f64,
         /// The x-axis-rotation attribute indicates how the ellipse as a whole is rotated relative to the current coordinate system.
-        x_axis_rotation: f32,
+        x_axis_rotation: f64,
         /// The large-arc-flag attribute indicates whether an arc should take the longer or shorter way around the ellipse to join its start and end points.
         large_arc_flag: bool,
         /// The sweep-flag attribute indicates whether the arc should be drawn in a "positive-angle" or "negative-angle" direction.
         sweep_flag: bool,
         /// The end point.
-        end_pt: Vec2f,
+        end_pt: Vec2f64,
     },
 
     /// Draw an elliptical arc to a point relative to the current position.
@@ -187,15 +188,15 @@ pub enum PathCommand {
     /// TODO ...
     EllipticalArcToOffset {
         /// The x-axis and y-axis radii of the ellipse.
-        radii: Vec2f,
+        radii: Vec2f64,
         /// The x-axis-rotation attribute indicates how the ellipse as a whole is rotated relative to the current coordinate system.
-        x_axis_rotation: f32,
+        x_axis_rotation: f64,
         /// The large-arc-flag attribute indicates whether an arc should take the longer or shorter way around the ellipse to join its start and end points.
         large_arc_flag: bool,
         /// The sweep-flag attribute indicates whether the arc should be drawn in a "positive-angle" or "negative-angle" direction.
         sweep_flag: bool,
         /// The end point.
-        end_pt_offset: Vec2f,
+        end_pt_offset: Vec2f64,
     },
 }
 
@@ -211,7 +212,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// M x y
     /// ```
-    M(f32, f32),
+    M(f64, f64),
 
     /// Move to a point relative to the current position.
     ///
@@ -219,7 +220,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// m dx dy
     /// ```
-    m(f32, f32),
+    m(f64, f64),
 
     /// Draw a line to a point.
     ///
@@ -227,7 +228,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// L x y
     /// ```
-    L(f32, f32),
+    L(f64, f64),
 
     /// Draw a line to a point relative to the current position.
     ///
@@ -235,7 +236,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// l dx dy
     /// ```
-    l(f32, f32),
+    l(f64, f64),
 
     /// Draw a horizontal line to a point.
     ///
@@ -243,7 +244,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// H x
     /// ```
-    H(f32),
+    H(f64),
 
     /// Draw a horizontal line to a point relative to the current position.
     ///
@@ -251,7 +252,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// h dx
     /// ```
-    h(f32),
+    h(f64),
 
     /// Draw a vertical line to a point.
     ///
@@ -259,7 +260,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// V y
     /// ```
-    V(f32),
+    V(f64),
 
     /// Draw a vertical line to a point relative to the current position.
     ///
@@ -267,7 +268,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// v dy
     /// ```
-    v(f32),
+    v(f64),
 
     /// Close the current path with a straight line.
     ///
@@ -288,7 +289,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// C x1 y1 x2 y2 x y
     /// ```
-    C(f32, f32, f32, f32, f32, f32),
+    C(f64, f64, f64, f64, f64, f64),
 
     /// Draw a cubic Bezier curve to a point relative to the current position.
     ///
@@ -296,7 +297,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// c dx1 dy1 dx2 dy2 dx dy
     /// ```
-    c(f32, f32, f32, f32, f32, f32),
+    c(f64, f64, f64, f64, f64, f64),
 
     /// Draw a cubic Bezier curve to a point.
     ///
@@ -304,7 +305,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// S x2 y2 x y
     /// ```
-    S(f32, f32, f32, f32),
+    S(f64, f64, f64, f64),
 
     /// Draw a cubic Bezier curve to a point relative to the current position.
     ///
@@ -312,7 +313,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// s dx2 dy2 dx dy
     /// ```
-    s(f32, f32, f32, f32),
+    s(f64, f64, f64, f64),
 
     /// Draw a quadratic Bezier curve to a point.
     ///
@@ -320,7 +321,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// Q x1 y1 x y
     /// ```
-    Q(f32, f32, f32, f32),
+    Q(f64, f64, f64, f64),
 
     /// Draw a quadratic Bezier curve to a point relative to the current position.
     ///
@@ -328,7 +329,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// q dx1 dy1 dx dy
     /// ```
-    q(f32, f32, f32, f32),
+    q(f64, f64, f64, f64),
 
     /// Draw a quadratic Bezier curve to a point.
     ///
@@ -336,7 +337,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// T x y
     /// ```
-    T(f32, f32),
+    T(f64, f64),
 
     /// Draw a quadratic Bezier curve to a point relative to the current position.
     ///
@@ -344,7 +345,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// t dx dy
     /// ```
-    t(f32, f32),
+    t(f64, f64),
 
     /// Draw an elliptical arc to a point.
     ///
@@ -352,7 +353,7 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// A rx ry x-axis-rotation large-arc-flag sweep-flag x y
     /// ```
-    A(f32, f32, f32, bool, bool, f32, f32),
+    A(f64, f64, f64, bool, bool, f64, f64),
 
     /// Draw an elliptical arc to a point relative to the current position.
     ///
@@ -360,74 +361,74 @@ pub enum SvgStylePathCommand {
     /// ```plain
     /// a rx ry x-axis-rotation large-arc-flag sweep-flag dx dy
     /// ```
-    a(f32, f32, f32, bool, bool, f32, f32),
+    a(f64, f64, f64, bool, bool, f64, f64),
 }
 
 impl SvgStylePathCommand {
     /// Convert the SVG style path command to a [`PathCommand`].
     pub fn to_path_command(&self) -> PathCommand {
         match self {
-            SvgStylePathCommand::M(x, y) => PathCommand::MoveTo(Vec2f::new(*x, *y)),
-            SvgStylePathCommand::m(dx, dy) => PathCommand::MoveToOffset(Vec2f::new(*dx, *dy)),
-            SvgStylePathCommand::L(x, y) => PathCommand::LineTo(Vec2f::new(*x, *y)),
-            SvgStylePathCommand::l(dx, dy) => PathCommand::LineToOffset(Vec2f::new(*dx, *dy)),
+            SvgStylePathCommand::M(x, y) => PathCommand::MoveTo(Vec2f64::new(*x, *y)),
+            SvgStylePathCommand::m(dx, dy) => PathCommand::MoveToOffset(Vec2f64::new(*dx, *dy)),
+            SvgStylePathCommand::L(x, y) => PathCommand::LineTo(Vec2f64::new(*x, *y)),
+            SvgStylePathCommand::l(dx, dy) => PathCommand::LineToOffset(Vec2f64::new(*dx, *dy)),
             SvgStylePathCommand::H(x) => PathCommand::HorizontalLineTo(*x),
             SvgStylePathCommand::h(dx) => PathCommand::HorizontalLineToOffset(*dx),
             SvgStylePathCommand::V(y) => PathCommand::VerticalLineTo(*y),
             SvgStylePathCommand::v(dy) => PathCommand::VerticalLineToOffset(*dy),
             SvgStylePathCommand::Z | SvgStylePathCommand::z => PathCommand::ClosePath,
             SvgStylePathCommand::C(x1, y1, x2, y2, x, y) => PathCommand::CubicBezierCurveTo {
-                control_pt_1: Vec2f::new(*x1, *y1),
-                control_pt_2: Vec2f::new(*x2, *y2),
-                end_pt: Vec2f::new(*x, *y),
+                control_pt_1: Vec2f64::new(*x1, *y1),
+                control_pt_2: Vec2f64::new(*x2, *y2),
+                end_pt: Vec2f64::new(*x, *y),
             },
             SvgStylePathCommand::c(dx1, dy1, dx2, dy2, dx, dy) => {
                 PathCommand::CubicBezierCurveToOffset {
-                    control_pt_1_offset: Vec2f::new(*dx1, *dy1),
-                    control_pt_2_offset: Vec2f::new(*dx2, *dy2),
-                    end_pt_offset: Vec2f::new(*dx, *dy),
+                    control_pt_1_offset: Vec2f64::new(*dx1, *dy1),
+                    control_pt_2_offset: Vec2f64::new(*dx2, *dy2),
+                    end_pt_offset: Vec2f64::new(*dx, *dy),
                 }
             }
             SvgStylePathCommand::S(x2, y2, x, y) => PathCommand::SmoothCubicBezierCurveTo {
-                control_pt_2: Vec2f::new(*x2, *y2),
-                end_pt: Vec2f::new(*x, *y),
+                control_pt_2: Vec2f64::new(*x2, *y2),
+                end_pt: Vec2f64::new(*x, *y),
             },
             SvgStylePathCommand::s(dx2, dy2, dx, dy) => {
                 PathCommand::SmoothCubicBezierCurveToOffset {
-                    control_pt_2_offset: Vec2f::new(*dx2, *dy2),
-                    end_pt_offset: Vec2f::new(*dx, *dy),
+                    control_pt_2_offset: Vec2f64::new(*dx2, *dy2),
+                    end_pt_offset: Vec2f64::new(*dx, *dy),
                 }
             }
             SvgStylePathCommand::Q(x1, y1, x, y) => PathCommand::QuadraticBezierCurveTo {
-                control_pt: Vec2f::new(*x1, *y1),
-                end_pt: Vec2f::new(*x, *y),
+                control_pt: Vec2f64::new(*x1, *y1),
+                end_pt: Vec2f64::new(*x, *y),
             },
             SvgStylePathCommand::q(dx1, dy1, dx, dy) => PathCommand::QuadraticBezierCurveToOffset {
-                control_pt_offset: Vec2f::new(*dx1, *dy1),
-                end_pt_offset: Vec2f::new(*dx, *dy),
+                control_pt_offset: Vec2f64::new(*dx1, *dy1),
+                end_pt_offset: Vec2f64::new(*dx, *dy),
             },
             SvgStylePathCommand::T(x, y) => {
-                PathCommand::SmoothQuadraticBezierCurveTo(Vec2f::new(*x, *y))
+                PathCommand::SmoothQuadraticBezierCurveTo(Vec2f64::new(*x, *y))
             }
             SvgStylePathCommand::t(dx, dy) => {
-                PathCommand::SmoothQuadraticBezierCurveToOffset(Vec2f::new(*dx, *dy))
+                PathCommand::SmoothQuadraticBezierCurveToOffset(Vec2f64::new(*dx, *dy))
             }
             SvgStylePathCommand::A(rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, x, y) => {
                 PathCommand::EllipticalArcTo {
-                    radii: Vec2f::new(*rx, *ry),
-                    x_axis_rotation: *x_axis_rotation * std::f32::consts::PI / 180.0,
+                    radii: Vec2f64::new(*rx, *ry),
+                    x_axis_rotation: *x_axis_rotation * std::f64::consts::PI / 180.0,
                     large_arc_flag: *large_arc_flag,
                     sweep_flag: *sweep_flag,
-                    end_pt: Vec2f::new(*x, *y),
+                    end_pt: Vec2f64::new(*x, *y),
                 }
             }
             SvgStylePathCommand::a(rx, ry, x_axis_rotation, large_arc_flag, sweep_flag, dx, dy) => {
                 PathCommand::EllipticalArcToOffset {
-                    radii: Vec2f::new(*rx, *ry),
-                    x_axis_rotation: *x_axis_rotation * std::f32::consts::PI / 180.0,
+                    radii: Vec2f64::new(*rx, *ry),
+                    x_axis_rotation: *x_axis_rotation * std::f64::consts::PI / 180.0,
                     large_arc_flag: *large_arc_flag,
                     sweep_flag: *sweep_flag,
-                    end_pt_offset: Vec2f::new(*dx, *dy),
+                    end_pt_offset: Vec2f64::new(*dx, *dy),
                 }
             }
         }
@@ -438,8 +439,8 @@ impl SvgStylePathCommand {
 ///
 /// This module contains some very simple algorithms for discretizing paths and polylines.
 pub mod discretization {
-    use super::{Mat2f, Vec2f};
-    use crate::base::defs::rect::FRect;
+    use super::{Mat2f64, Vec2f64};
+    use crate::base::defs::rect::F64Rect;
     use crate::base::shapes::{path::PathCommand, polyline::BrokenPolylineCommand};
     use crate::base::transform::Transform2d;
 
@@ -458,16 +459,16 @@ pub mod discretization {
     #[derive(Clone, Copy, Debug)]
     pub struct DiscretizationParams {
         /// maximum distance between the curve and the polyline
-        pub tolerance: f32,
+        pub tolerance: f64,
 
         /// maximum angle between the curve and the polyline
-        pub max_angle: f32,
+        pub max_angle: f64,
 
         /// Area Of Interest, if the curve is outside of this area, it will not be subdivided
         /// in order to avoid wasting time on curves that are not visible or near-infinite.
         ///
         /// If you don't want to use this feature, set it to `None`.
-        pub aoi: Option<FRect>,
+        pub aoi: Option<F64Rect>,
     }
 
     impl Default for DiscretizationParams {
@@ -487,8 +488,8 @@ pub mod discretization {
     /// ## Example
     /// ```rust
     /// let path_commands = [
-    ///    PathCommand::MoveTo(Vec2f::new(0.0, 0.0)),
-    ///    PathCommand::LineTo(Vec2f::new(1.0, 0.0)),
+    ///    PathCommand::MoveTo(Vec2f64::new(0.0, 0.0)),
+    ///    PathCommand::LineTo(Vec2f64::new(1.0, 0.0)),
     /// ];
     /// let discretizer = PathDiscretizer::new(
     ///     DiscretizationParams::default(),
@@ -591,7 +592,7 @@ pub mod discretization {
                         return self.next();
                     }
                     PathCommand::HorizontalLineTo(x) => {
-                        let pt = Vec2f::new(*x, self.state.current_position.y);
+                        let pt = Vec2f64::new(*x, self.state.current_position.y);
                         let it = curves::discretize_segment(
                             self.state.current_position,
                             pt,
@@ -604,7 +605,7 @@ pub mod discretization {
                         return self.next();
                     }
                     PathCommand::HorizontalLineToOffset(offset) => {
-                        let pt = Vec2f::new(
+                        let pt = Vec2f64::new(
                             self.state.current_position.x + offset,
                             self.state.current_position.y,
                         );
@@ -620,7 +621,7 @@ pub mod discretization {
                         return self.next();
                     }
                     PathCommand::VerticalLineTo(y) => {
-                        let pt = Vec2f::new(self.state.current_position.x, *y);
+                        let pt = Vec2f64::new(self.state.current_position.x, *y);
                         let it = curves::discretize_segment(
                             self.state.current_position,
                             pt,
@@ -633,7 +634,7 @@ pub mod discretization {
                         return self.next();
                     }
                     PathCommand::VerticalLineToOffset(offset) => {
-                        let pt = Vec2f::new(
+                        let pt = Vec2f64::new(
                             self.state.current_position.x,
                             self.state.current_position.y + offset,
                         );
@@ -861,36 +862,36 @@ pub mod discretization {
     }
 
     struct PathDiscretizationState<'a> {
-        current_position: Vec2f,
-        current_polyline_start: Vec2f,
-        current_control_point: Vec2f,
-        subpath_iterator: Option<Box<dyn Iterator<Item = Vec2f> + 'a>>,
+        current_position: Vec2f64,
+        current_polyline_start: Vec2f64,
+        current_control_point: Vec2f64,
+        subpath_iterator: Option<Box<dyn Iterator<Item = Vec2f64> + 'a>>,
     }
 
     impl<'a> PathDiscretizationState<'a> {
         fn new() -> Self {
             Self {
-                current_position: Vec2f::new(0.0, 0.0),
-                current_polyline_start: Vec2f::new(0.0, 0.0),
-                current_control_point: Vec2f::new(0.0, 0.0),
+                current_position: Vec2f64::new(0.0, 0.0),
+                current_polyline_start: Vec2f64::new(0.0, 0.0),
+                current_control_point: Vec2f64::new(0.0, 0.0),
                 subpath_iterator: None,
             }
         }
 
         /// Sets the current position and control point to the given point.
-        fn set_curr_pos_no_ctrl_pt(&mut self, pt: &Vec2f) {
+        fn set_curr_pos_no_ctrl_pt(&mut self, pt: &Vec2f64) {
             self.current_position = *pt;
             self.current_control_point = *pt;
         }
 
         /// Sets the current position and control point to the given point and sets the current polyline start to the given point.
-        fn move_to(&mut self, pt: &Vec2f) {
+        fn move_to(&mut self, pt: &Vec2f64) {
             self.set_curr_pos_no_ctrl_pt(pt);
             self.current_polyline_start = *pt;
         }
 
         /// Sets the current position and control point to the given point.
-        fn set_current_pos_and_ctrl_pt(&mut self, pos: &Vec2f, ctrl_pt: &Vec2f) {
+        fn set_current_pos_and_ctrl_pt(&mut self, pos: &Vec2f64, ctrl_pt: &Vec2f64) {
             self.current_position = *pos;
             self.current_control_point = *ctrl_pt;
         }
@@ -898,17 +899,17 @@ pub mod discretization {
 
     /// A parametric curve is a curve that can be evaluated at any point in the interval `[start, end]`.
     pub trait ParametricCurve {
-        fn eval(&self, t: f32) -> Vec2f;
-        fn start(&self) -> f32;
-        fn end(&self) -> f32;
-        fn param_range_width(&self) -> f32 {
+        fn eval(&self, t: f64) -> Vec2f64;
+        fn start(&self) -> f64;
+        fn end(&self) -> f64;
+        fn param_range_width(&self) -> f64 {
             (self.end() - self.start()).abs()
         }
 
         /// checks if the value is close or past the end of the curve
-        fn is_end_or_past_end(&self, t: f32) -> bool {
+        fn is_end_or_past_end(&self, t: f64) -> bool {
             // if the value is close to the end, we consider it to be the end
-            if (t - self.end()).abs() < std::f32::EPSILON.sqrt() * self.param_range_width() {
+            if (t - self.end()).abs() < std::f64::EPSILON.sqrt() * self.param_range_width() {
                 return true;
             }
 
@@ -923,7 +924,7 @@ pub mod discretization {
         }
 
         /// picks the next t value and returns the next t value, whether the curve is finished, and the step size
-        fn next_t_for_step(&self, t: f32, step: f32) -> (f32, bool, f32) {
+        fn next_t_for_step(&self, t: f64, step: f64) -> (f64, bool, f64) {
             if self.is_end_or_past_end(t + step) {
                 (self.end(), true, self.end() - t)
             } else {
@@ -970,8 +971,8 @@ pub mod discretization {
         fn is_ok<'b1, 'c1>(
             state: &ParametricCurveDiscretizerState,
             params: &DiscretizationParams,
-            next_point: &Vec2f,
-            mid_pt: &Vec2f,
+            next_point: &Vec2f64,
+            mid_pt: &Vec2f64,
         ) -> bool {
             // if a point is outside of the area of interest, we don't need to check the other conditions
             // since we would not care about precision, we can just return true
@@ -1018,21 +1019,21 @@ pub mod discretization {
     /// The state of the discretizer
     struct ParametricCurveDiscretizerState {
         /// The current `t` value
-        t: f32,
+        t: f64,
         /// The current `t` step size
-        dt: f32,
+        dt: f64,
         /// The current point
-        pt: Vec2f,
+        pt: Vec2f64,
         /// `true` if the curve is finished
         finished: bool, // TODO this is unnecessary, maybe we could set to a value that is past the end of the curve to indicate that it is finished?
     }
 
     impl<'a> Iterator for ParametricCurveDiscretizerIterator<'a> {
-        type Item = Vec2f;
+        type Item = Vec2f64;
 
         fn next(&mut self) -> Option<Self::Item> {
             // the transformed curve
-            let s = |t: f32| {
+            let s = |t: f64| {
                 return self.transform.eval(self.curve.eval(t));
             };
 
@@ -1094,7 +1095,7 @@ pub mod discretization {
                             let next_pt_is_ok =
                                 Self::is_ok(&state, &self.params, &next_pt, &mid_pt);
                             if stepped.abs()
-                                < std::f32::EPSILON.sqrt() * self.curve.param_range_width()
+                                < std::f64::EPSILON.sqrt() * self.curve.param_range_width()
                             {
                                 break;
                             }
@@ -1136,7 +1137,7 @@ pub mod discretization {
 
                 // TODO move this check to the constructor
                 // we do not want to discretize curves that have very small parameter range
-                if (self.curve.end() - self.curve.start()).abs() < std::f32::EPSILON.sqrt() {
+                if (self.curve.end() - self.curve.start()).abs() < std::f64::EPSILON.sqrt() {
                     // this is a degenerate curve
                     return None;
                 }
@@ -1154,7 +1155,7 @@ pub mod discretization {
                 let initial_divisions = self.initial_subs + 1;
 
                 // the initial step size
-                let dt = (self.curve.end() - self.curve.start()) / (initial_divisions as f32);
+                let dt = (self.curve.end() - self.curve.start()) / (initial_divisions as f64);
 
                 self.state = Some(ParametricCurveDiscretizerState {
                     t: self.curve.start(),
@@ -1180,31 +1181,31 @@ pub mod discretization {
 
         /// A segment described as a parametric curve
         pub struct ParametricSegment {
-            p0: Vec2f,
-            p1: Vec2f,
+            p0: Vec2f64,
+            p1: Vec2f64,
         }
 
         impl ParametricCurve for ParametricSegment {
-            fn eval(&self, t: f32) -> Vec2f {
+            fn eval(&self, t: f64) -> Vec2f64 {
                 self.p0 + (self.p1 - self.p0) * t
             }
-            fn start(&self) -> f32 {
+            fn start(&self) -> f64 {
                 0.0
             }
-            fn end(&self) -> f32 {
+            fn end(&self) -> f64 {
                 1.0
             }
         }
 
         /// Iterates over the two points of a segment
         pub struct SegmentPointsIterator {
-            begin: Vec2f,
-            end: Vec2f,
+            begin: Vec2f64,
+            end: Vec2f64,
             index: usize,
         }
 
         impl SegmentPointsIterator {
-            pub fn new(begin: &Vec2f, end: &Vec2f, skip_first: bool) -> Self {
+            pub fn new(begin: &Vec2f64, end: &Vec2f64, skip_first: bool) -> Self {
                 Self {
                     begin: *begin,
                     end: *end,
@@ -1214,7 +1215,7 @@ pub mod discretization {
         }
 
         impl Iterator for SegmentPointsIterator {
-            type Item = Vec2f;
+            type Item = Vec2f64;
 
             fn next(&mut self) -> Option<Self::Item> {
                 if self.index == 0 {
@@ -1234,12 +1235,12 @@ pub mod discretization {
         /// If the transform is line-preserving, the segment is discretized into two points,
         /// otherwise the segment is discretized using the given discretization parameters.
         pub fn discretize_segment<'a, 't: 'a>(
-            p0: Vec2f,
-            p1: Vec2f,
+            p0: Vec2f64,
+            p1: Vec2f64,
             skip_first: bool,
             params: &'a DiscretizationParams,
             transform: &'a Transform2d,
-        ) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
+        ) -> Box<dyn Iterator<Item = Vec2f64> + 'a> {
             if transform.is_line_preserving() {
                 let p0_primed = transform.eval(p0);
                 let p1_primed = transform.eval(p1);
@@ -1262,23 +1263,23 @@ pub mod discretization {
         #[derive(Clone, Copy, Debug)]
         struct ParametricCubic2dBezier {
             /// The first pass-through point
-            p0: Vec2f,
+            p0: Vec2f64,
             /// The first control point
-            p1: Vec2f,
+            p1: Vec2f64,
             /// The second control point
-            p2: Vec2f,
+            p2: Vec2f64,
             /// The second pass-through point
-            p3: Vec2f,
+            p3: Vec2f64,
         }
 
         impl ParametricCubic2dBezier {
-            fn new(p0: Vec2f, p1: Vec2f, p2: Vec2f, p3: Vec2f) -> Self {
+            fn new(p0: Vec2f64, p1: Vec2f64, p2: Vec2f64, p3: Vec2f64) -> Self {
                 Self { p0, p1, p2, p3 }
             }
         }
 
         impl ParametricCurve for ParametricCubic2dBezier {
-            fn eval(&self, t: f32) -> Vec2f {
+            fn eval(&self, t: f64) -> Vec2f64 {
                 let t2 = t * t;
                 let t3 = t2 * t;
                 let mt = 1.0 - t;
@@ -1287,25 +1288,25 @@ pub mod discretization {
                 self.p0 * mt3 + self.p1 * 3.0 * mt2 * t + self.p2 * 3.0 * mt * t2 + self.p3 * t3
             }
 
-            fn start(&self) -> f32 {
+            fn start(&self) -> f64 {
                 0.0
             }
 
-            fn end(&self) -> f32 {
+            fn end(&self) -> f64 {
                 1.0
             }
         }
 
         /// Discretizes a cubic bezier curve.
         pub fn discretize_cubic_bezier<'a, 't: 'a>(
-            p0: Vec2f,
-            p1: Vec2f,
-            p2: Vec2f,
-            p3: Vec2f,
+            p0: Vec2f64,
+            p1: Vec2f64,
+            p2: Vec2f64,
+            p3: Vec2f64,
             skip_first: bool,
             params: &'a DiscretizationParams,
             transform: &'a Transform2d,
-        ) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
+        ) -> Box<dyn Iterator<Item = Vec2f64> + 'a> {
             const DEGREE: u32 = 3;
             let curve = ParametricCubic2dBezier::new(p0, p1, p2, p3);
             let discretizer = ParametricCurveDiscretizerIterator::new(
@@ -1321,45 +1322,45 @@ pub mod discretization {
         /// A parametric quadratic 2d bezier curve
         struct ParametricQuadratic2dBezier {
             /// The first pass-through point
-            p0: Vec2f,
+            p0: Vec2f64,
             /// The control point
-            p1: Vec2f,
+            p1: Vec2f64,
             /// The second pass-through point
-            p2: Vec2f,
+            p2: Vec2f64,
         }
 
         impl ParametricQuadratic2dBezier {
-            fn new(p0: Vec2f, p1: Vec2f, p2: Vec2f) -> Self {
+            fn new(p0: Vec2f64, p1: Vec2f64, p2: Vec2f64) -> Self {
                 Self { p0, p1, p2 }
             }
         }
 
         impl ParametricCurve for ParametricQuadratic2dBezier {
-            fn eval(&self, t: f32) -> Vec2f {
+            fn eval(&self, t: f64) -> Vec2f64 {
                 let t2 = t * t;
                 let mt = 1.0 - t;
                 let mt2 = mt * mt;
                 self.p0 * mt2 + self.p1 * 2.0 * mt * t + self.p2 * t2
             }
 
-            fn start(&self) -> f32 {
+            fn start(&self) -> f64 {
                 0.0
             }
 
-            fn end(&self) -> f32 {
+            fn end(&self) -> f64 {
                 1.0
             }
         }
 
         /// Discretizes a quadratic bezier curve.
         pub fn discretize_quadratic_bezier<'a, 't: 'a>(
-            p0: Vec2f,
-            p1: Vec2f,
-            p2: Vec2f,
+            p0: Vec2f64,
+            p1: Vec2f64,
+            p2: Vec2f64,
             skip_first: bool,
             params: &'a DiscretizationParams,
             transform: &'a Transform2d,
-        ) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
+        ) -> Box<dyn Iterator<Item = Vec2f64> + 'a> {
             const DEGREE: u32 = 2;
             let curve = ParametricQuadratic2dBezier::new(p0, p1, p2);
             let discretizer = ParametricCurveDiscretizerIterator::new(
@@ -1375,21 +1376,21 @@ pub mod discretization {
         /// A parametric arc function.
         #[derive(Clone, Copy, Debug)]
         pub struct CenterParametricArc {
-            center: Vec2f,
-            radii: Vec2f,
-            start_angle: f32,
-            //end_angle: f32,
-            sweep: f32,
-            x_axis_rotation: f32,
+            center: Vec2f64,
+            radii: Vec2f64,
+            start_angle: f64,
+            //end_angle: f64,
+            sweep: f64,
+            x_axis_rotation: f64,
         }
 
         impl CenterParametricArc {
             fn new(
-                center: Vec2f,
-                radii: Vec2f,
-                start_angle: f32,
-                sweep: f32,
-                x_axis_rotation: f32,
+                center: Vec2f64,
+                radii: Vec2f64,
+                start_angle: f64,
+                sweep: f64,
+                x_axis_rotation: f64,
             ) -> Self {
                 Self {
                     center,
@@ -1402,37 +1403,37 @@ pub mod discretization {
         }
 
         impl ParametricCurve for CenterParametricArc {
-            fn eval(&self, t: f32) -> Vec2f {
+            fn eval(&self, t: f64) -> Vec2f64 {
                 let angle = self.start_angle + t * self.sweep;
                 let x = self.center.x + self.radii.x * angle.cos();
                 let y = self.center.y + self.radii.y * angle.sin();
-                let pt = Vec2f::new(x, y);
+                let pt = Vec2f64::new(x, y);
                 //pt.rotate_around(self.center, self.x_axis_rotation)
                 let rot_mat = {
                     let cos = self.x_axis_rotation.cos();
                     let sin = self.x_axis_rotation.sin();
-                    Mat2f::new(cos, -sin, sin, cos)
+                    Mat2f64::new(cos, -sin, sin, cos)
                 };
                 rot_mat * (pt - self.center) + self.center
             }
 
-            fn start(&self) -> f32 {
+            fn start(&self) -> f64 {
                 0.0
             }
 
-            fn end(&self) -> f32 {
+            fn end(&self) -> f64 {
                 1.0
             }
         }
 
         /// Converts an endpoint parametric arc function to a center parametric arc function.
         pub fn endpoint_to_center_parametric_arc_function(
-            radii: &Vec2f,
-            x_axis_rotation: f32,
+            radii: &Vec2f64,
+            x_axis_rotation: f64,
             large_arc_flag: bool,
             sweep_flag: bool,
-            p0: Vec2f,
-            p1: Vec2f,
+            p0: Vec2f64,
+            p1: Vec2f64,
         ) -> CenterParametricArc {
             // https://www.w3.org/TR/SVG/implnote.html
             // https://math.stackexchange.com/questions/4285747/last-step-of-conversion-from-endpoint-to-center-parameterization-of-an-elliptica
@@ -1442,8 +1443,8 @@ pub mod discretization {
                 let cos = x_axis_rotation.cos();
                 let sin = x_axis_rotation.sin();
                 (
-                    Mat2f::new(cos, -sin, sin, cos),
-                    Mat2f::new(cos, sin, -sin, cos),
+                    Mat2f64::new(cos, -sin, sin, cos),
+                    Mat2f64::new(cos, sin, -sin, cos),
                 )
             };
 
@@ -1451,7 +1452,7 @@ pub mod discretization {
 
             let lambda = (sqr(p0_primed.x) / sqr(radii.x)) + (sqr(p0_primed.y) / sqr(radii.y));
 
-            let radii: Vec2f = {
+            let radii: Vec2f64 = {
                 if lambda > 1.0 {
                     radii * lambda.sqrt()
                 } else {
@@ -1465,18 +1466,18 @@ pub mod discretization {
                 (sqr(rx) * sqr(p0_primed.y) + sqr(ry) * sqr(p0_primed.x))
             ).sqrt() *
             (if large_arc_flag != sweep_flag { 1.0 } else { -1.0 }) *
-            //Vec2f::new(
+            //Vec2f64::new(
             //    p0_primed.y,
             //    -p0_primed.x
             //).normalize();
-            Vec2f::new(
+            Vec2f64::new(
                 p0_primed.y * rx / ry,
                 -p0_primed.x * ry / rx
             );
 
             let c = phi_rot_mat * c_primed + (p0 + p1) * 0.5;
 
-            //let angle_between = |v0: Vec2f, v1: Vec2f| {
+            //let angle_between = |v0: Vec2f64, v1: Vec2f| {
             //    // TODO by copilot, very clever! But to check...
             //    let dot = v0.dot(&v1);
             //    let det = v0.x * v1.y - v0.y * v1.x;
@@ -1484,23 +1485,23 @@ pub mod discretization {
             //};
 
             let theta_0 = angle_between(
-                &Vec2f::new(1.0, 0.0),
+                &Vec2f64::new(1.0, 0.0),
                 &(p0_primed - c_primed).component_div(&radii),
             );
             // TODO this mod may be wrong...
             let delta_theta = angle_between(
                 &(p0_primed - c_primed).component_div(&radii),
                 &(-p0_primed - c_primed).component_div(&radii),
-            ) % (2.0 * std::f32::consts::PI);
+            ) % (2.0 * std::f64::consts::PI);
             let delta_theta = if sweep_flag {
                 if delta_theta < 0.0 {
-                    delta_theta + 2.0 * std::f32::consts::PI
+                    delta_theta + 2.0 * std::f64::consts::PI
                 } else {
                     delta_theta
                 }
             } else {
                 if delta_theta > 0.0 {
-                    delta_theta - 2.0 * std::f32::consts::PI
+                    delta_theta - 2.0 * std::f64::consts::PI
                 } else {
                     delta_theta
                 }
@@ -1513,16 +1514,16 @@ pub mod discretization {
 
         /// Discretizes an elliptical arc.
         pub fn discretize_elliptical_arc<'a, 't: 'a>(
-            radii: &Vec2f,
-            x_axis_rotation: f32,
+            radii: &Vec2f64,
+            x_axis_rotation: f64,
             large_arc_flag: bool,
             sweep_flag: bool,
-            p0: Vec2f,
-            p1: Vec2f,
+            p0: Vec2f64,
+            p1: Vec2f64,
             skip_first: bool,
             params: &'a DiscretizationParams,
             transform: &'a Transform2d,
-        ) -> Box<dyn Iterator<Item = Vec2f> + 'a> {
+        ) -> Box<dyn Iterator<Item = Vec2f64> + 'a> {
             let arc = endpoint_to_center_parametric_arc_function(
                 radii,
                 x_axis_rotation,
@@ -1547,7 +1548,7 @@ pub mod discretization {
     where
         T: Copy,
         V: Mul<T, Output = V> + Add<V, Output = V>,
-        f32: Sub<T, Output = T>,
+        f64: Sub<T, Output = T>,
     {
         a * (1.0 - t) + b * t
     }
@@ -1560,7 +1561,7 @@ pub mod discretization {
         x * x
     }
 
-    pub fn dist_to_segment(pt: &Vec2f, segment: (&Vec2f, &Vec2f)) -> f32 {
+    pub fn dist_to_segment(pt: &Vec2f64, segment: (&Vec2f64, &Vec2f64)) -> f64 {
         let (a, b) = segment;
         let ab = b - a;
         let ap = pt - a;
@@ -1570,7 +1571,7 @@ pub mod discretization {
     }
 
     #[inline]
-    pub fn angle_between(v0: &Vec2f, v1: &Vec2f) -> f32 {
+    pub fn angle_between(v0: &Vec2f64, v1: &Vec2f64) -> f64 {
         // TODO by copilot, very clever! But to check...
         let dot = v0.dot(&v1);
         let det = v0.x * v1.y - v0.y * v1.x;

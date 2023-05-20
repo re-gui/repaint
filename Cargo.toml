@@ -2,6 +2,7 @@
 
 members = [
     "repaint",
+    "implementations/piet-svg",
 ]
 
 default-members = [

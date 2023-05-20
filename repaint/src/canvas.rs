@@ -41,7 +41,7 @@ pub trait Canvas {
     }
 
     // TODO
-    fn shape(&self) -> Shape;
+    fn shape(&self) -> Box<dyn Shape>;
 }
 
 #[derive(Debug, Display)]

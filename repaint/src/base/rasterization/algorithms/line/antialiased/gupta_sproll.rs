@@ -2,7 +2,7 @@
 use crate::base::defs::linalg::*;
 
 /// See <https://en.wikipedia.org/wiki/Line_drawing_algorithm>
-pub fn line<F: FnMut(u32, u32, f32) -> ()>(start: &Vec2f, end: &Vec2f, plot: &mut F) -> () {
+pub fn line<F: FnMut(u32, u32, f32) -> ()>(start: &Vec2f32, end: &Vec2f32, plot: &mut F) -> () {
     // TODO non funziona bene
     if start == end {
         return;
@@ -18,9 +18,9 @@ pub fn line<F: FnMut(u32, u32, f32) -> ()>(start: &Vec2f, end: &Vec2f, plot: &mu
     //let iend: Vec2i = end.map(|x| x.round() as i32);
 
     //let p: Vec2i = istart;
-    let mut p: Vec2f = start.clone();
+    let mut p: Vec2f32 = start.clone();
     //let d_vec: Vec2i = iend - istart;
-    let d_vec: Vec2f = end - start;
+    let d_vec: Vec2f32 = end - start;
     let mut discriminator = 2.0 * d_vec.y - d_vec.x;
 
     // Euclidean distance of point (x, y) from line (signed)

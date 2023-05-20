@@ -30,47 +30,47 @@ fn main() {
     use repaint::base::defs::linalg::*;
 
     let path: Vec<pp::PathCommand> = vec![
-        pc::MoveTo(Vec2f::new(0.0, 0.0)),
-        pc::LineTo(Vec2f::new(100.0, 0.0)),
+        pc::MoveTo(Vec2f64::new(0.0, 0.0)),
+        pc::LineTo(Vec2f64::new(100.0, 0.0)),
         pc::CubicBezierCurveTo {
-            control_pt_1: Vec2f::new(100.0, 100.0),
-            control_pt_2: Vec2f::new(0.0, 100.0),
-            end_pt: Vec2f::new(0.0, 0.0),
+            control_pt_1: Vec2f64::new(100.0, 100.0),
+            control_pt_2: Vec2f64::new(0.0, 100.0),
+            end_pt: Vec2f64::new(0.0, 0.0),
         },
-        pc::LineTo(Vec2f::new(20.0, 0.0)),
-        pc::LineTo(Vec2f::new(20.0, 20.0)),
-        pc::LineTo(Vec2f::new(23.0, 20.0)),
+        pc::LineTo(Vec2f64::new(20.0, 0.0)),
+        pc::LineTo(Vec2f64::new(20.0, 20.0)),
+        pc::LineTo(Vec2f64::new(23.0, 20.0)),
         pc::EllipticalArcToOffset {
-            radii: Vec2f::new(20.0, 20.0),
+            radii: Vec2f64::new(20.0, 20.0),
             x_axis_rotation: 0.25,
             large_arc_flag: false,
             sweep_flag: false,
-            end_pt_offset: Vec2f::new(20.0, 0.0),
+            end_pt_offset: Vec2f64::new(20.0, 0.0),
         },
         pc::ClosePath,
-        pc::MoveTo(Vec2f::new(50.0, 50.0)),
+        pc::MoveTo(Vec2f64::new(50.0, 50.0)),
         pc::EllipticalArcToOffset {
-            radii: Vec2f::new(10.0, 10.0),
+            radii: Vec2f64::new(10.0, 10.0),
             x_axis_rotation: 0.0,
             large_arc_flag: false,
             sweep_flag: false,
-            end_pt_offset: Vec2f::new(20.0, 0.0),
+            end_pt_offset: Vec2f64::new(20.0, 0.0),
         },
         pc::EllipticalArcToOffset {
-            radii: Vec2f::new(10.0, 10.0),
+            radii: Vec2f64::new(10.0, 10.0),
             x_axis_rotation: 0.0,
             large_arc_flag: false,
             sweep_flag: false,
-            end_pt_offset: Vec2f::new(-20.0, 0.0),
+            end_pt_offset: Vec2f64::new(-20.0, 0.0),
         },
-        pc::MoveTo(Vec2f::new(50.0, 20.0)),
+        pc::MoveTo(Vec2f64::new(50.0, 20.0)),
         pc::QuadraticBezierCurveToOffset {
-            control_pt_offset: Vec2f::new(0.0, 10.0),
-            end_pt_offset: Vec2f::new(20.0, 0.0),
+            control_pt_offset: Vec2f64::new(0.0, 10.0),
+            end_pt_offset: Vec2f64::new(20.0, 0.0),
         },
         pc::SmoothCubicBezierCurveToOffset {
-            control_pt_2_offset: Vec2f::new(0.0, 10.0),
-            end_pt_offset: Vec2f::new(20.0, 0.0),
+            control_pt_2_offset: Vec2f64::new(0.0, 10.0),
+            end_pt_offset: Vec2f64::new(20.0, 0.0),
         },
     ];
     let mut params = pp::discretization::DiscretizationParams::default();
@@ -92,9 +92,9 @@ fn main() {
             "red", "green", "blue", "yellow", "orange", "purple", "pink", "brown", "black", "white",
         ];
         let mut color_counter = 0;
-        let mut points: Vec<Vec2f> = Vec::new();
+        let mut points: Vec<Vec2f64> = Vec::new();
         let mut count = 0;
-        let mut flush = |points: &mut Vec<Vec2f>| {
+        let mut flush = |points: &mut Vec<Vec2f64>| {
             if points.len() > 1 {
                 svg.push_str(&format!(r#"<polyline points=""#));
                 for i in 0..points.len() {

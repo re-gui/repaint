@@ -7,40 +7,40 @@ pub enum Transform2d {
     Identity,
 
     /// The Transform is a pure homogeneous scale
-    Scale(f32),
+    Scale(f64),
 
     /// The transform is a non-homogeneous scale with possibly different factors for <i-math>\\hat{x}</i-math> and <i-math>\\hat{y}</i-math>
     XYScale {
-        x_factor: f32,
-        y_factor: f32,
+        x_factor: f64,
+        y_factor: f64,
     },
 
     /// The transform is non-homogeneous scale
-    NonHomogeneousScale(Mat2f),
+    NonHomogeneousScale(Mat2f64),
 
     /// The transform is an affine transform
     Affine {
-        linear: Mat2f,
-        translation: Vec2f,
+        linear: Mat2f64,
+        translation: Vec2f64,
     },
 
     // The transform is a general transform that preserves lines
-    GeneralLinesPreserving(Box<dyn Fn(Vec2f) -> Vec2f>),
+    GeneralLinesPreserving(Box<dyn Fn(Vec2f64) -> Vec2f64>),
 
     // The transform is a general transform
-    General(Box<dyn Fn(Vec2f) -> Vec2f>),
+    General(Box<dyn Fn(Vec2f64) -> Vec2f64>),
 }
 
 impl Transform2d {
     /// Applies the transform to a point
-    pub fn eval(&self, point: Vec2f) -> Vec2f {
+    pub fn eval(&self, point: Vec2f64) -> Vec2f64 {
         match self {
             Transform2d::Identity => point,
             Transform2d::Scale(scale) => point * *scale,
             Transform2d::XYScale {
                 x_factor,
                 y_factor,
-            } => Vec2f::new(point.x * *x_factor, point.y * *y_factor),
+            } => Vec2f64::new(point.x * *x_factor, point.y * *y_factor),
             Transform2d::NonHomogeneousScale(linear) => linear * point,
             Transform2d::Affine {
                 linear,
@@ -66,15 +66,15 @@ impl Transform2d {
 
     /// Returns the linear part and the translation part of the transform
     /// if the transform is affine.
-    pub fn to_affine(&self) -> Option<(Mat2f, Vec2f)> {
+    pub fn to_affine(&self) -> Option<(Mat2f64, Vec2f64)> {
         match self {
             Transform2d::Identity => Some((
-                Mat2f::identity(),
-                Vec2f::zeros()
+                Mat2f64::identity(),
+                Vec2f64::zeros()
             )),
             Transform2d::Scale(scale) => Some((
                 scaling_matrix2(*scale, *scale),
-                Vec2f::zeros()
+                Vec2f64::zeros()
             )),
             Transform2d::XYScale {
                 x_factor,
@@ -82,11 +82,11 @@ impl Transform2d {
             } => Some((
                 //Mat2f::new_nonuniform_scaling(&Vec2f::new(*x_factor, *y_factor)),
                 scaling_matrix2(*x_factor, *y_factor),
-                Vec2f::zeros(),
+                Vec2f64::zeros(),
             )),
             Transform2d::NonHomogeneousScale(linear) => Some((
                 *linear,
-                Vec2f::zeros()
+                Vec2f64::zeros()
             )),
             Transform2d::Affine {
                 linear,
@@ -105,8 +105,8 @@ impl Transform2d {
     }
 }
 
-fn scaling_matrix2(x_scale: f32, y_scale: f32) -> Mat2f {
-    let mut m = Mat2f::zeros();
+fn scaling_matrix2(x_scale: f64, y_scale: f64) -> Mat2f64 {
+    let mut m = Mat2f64::zeros();
     m[(0, 0)] = x_scale;
     m[(1, 1)] = y_scale;
     m

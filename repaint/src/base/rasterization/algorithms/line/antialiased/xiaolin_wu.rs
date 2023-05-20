@@ -1,6 +1,6 @@
 use crate::base::defs::linalg::*;
 
-pub fn line<F: FnMut(u32, u32, f32) -> ()>(start: &Vec2f, end: &Vec2f, plot: &mut F) -> () {
+pub fn line<F: FnMut(u32, u32, f32) -> ()>(start: &Vec2f32, end: &Vec2f32, plot: &mut F) -> () {
     // https://en.wikipedia.org/wiki/Xiaolin_Wu%27s_line_algorithm
     // ! probably not correct, has some problems at the line ends
 

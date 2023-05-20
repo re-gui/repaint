@@ -1,12 +1,10 @@
-use crate::base::defs::rect::FRect;
+use crate::base::defs::rect::F64Rect;
 
-use na::Vector2;
-use nalgebra as na;
 
 use crate::base::defs::linalg::*;
 
 /// Clip a rectangle to another rectangle. Returns `None` if the rectangle is completely outside the clip rectangle.
-pub fn clip_rect(rect: &FRect, clip_rect: &FRect) -> Option<FRect> {
+pub fn clip_rect(rect: &F64Rect, clip_rect: &F64Rect) -> Option<F64Rect> {
     // old
     //if !rect.min.x.is_finite() || !rect.min.y.is_finite() || !rect.max.x.is_finite() || !rect.max.y.is_finite() {
     //    return None;
@@ -16,12 +14,12 @@ pub fn clip_rect(rect: &FRect, clip_rect: &FRect) -> Option<FRect> {
         return None;
     }
 
-    Some(FRect {
-        min: Vec2f::new(
+    Some(F64Rect {
+        min: Vec2f64::new(
             rect.min.x.max(clip_rect.min.x),
             rect.min.y.max(clip_rect.min.y),
         ),
-        max: Vec2f::new(
+        max: Vec2f64::new(
             rect.max.x.min(clip_rect.max.x),
             rect.max.y.min(clip_rect.max.y),
         ),
@@ -30,10 +28,10 @@ pub fn clip_rect(rect: &FRect, clip_rect: &FRect) -> Option<FRect> {
 
 /// Clip a line to a rectangle. Returns `None` if the line is completely outside the rectangle.
 pub fn clip_line(
-    start: &Vector2<f32>,
-    end: &Vector2<f32>,
-    rect: &FRect,
-) -> Option<(Vector2<f32>, Vector2<f32>)> {
+    start: &Vec2f64,
+    end: &Vec2f64,
+    rect: &F64Rect,
+) -> Option<(Vec2f64, Vec2f64)> {
     // TODO better checks to allow for infinite lines but not NaNs
     if !start.x.is_finite() || !start.y.is_finite() || !end.x.is_finite() || !end.y.is_finite() {
         return None;
@@ -89,11 +87,11 @@ pub fn clip_line(
     }
 
     return Some((
-        Vector2::<f32>::new(
+        Vec2f64::new(
             start.x.max(rect.min.x).min(rect.max.x),
             start.y.max(rect.min.y).min(rect.max.y),
         ),
-        Vector2::<f32>::new(
+        Vec2f64::new(
             end.x.max(rect.min.x).min(rect.max.x),
             end.y.max(rect.min.y).min(rect.max.y),
         ),

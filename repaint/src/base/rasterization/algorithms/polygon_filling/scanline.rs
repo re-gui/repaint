@@ -65,7 +65,10 @@ pub fn fill<C: LineSpanConsumer>(
                     pos = *pt;
                 }
                 BrokenPolylineCommand::LineTo(pt) => {
-                    let mut segment = Segment::new(pos, *pt);
+                    let mut segment = Segment::new(
+                        pos.cast(),
+                        pt.cast(),
+                    );
 
                     // ingore degenerate segments
                     if segment.start == segment.end {
@@ -88,9 +91,9 @@ pub fn fill<C: LineSpanConsumer>(
         segments
     };
 
-    let (min, max): (Vec2f, Vec2f) = {
-        let mut min = Vec2f::new(std::f32::MAX, std::f32::MAX);
-        let mut max = Vec2f::new(std::f32::MIN, std::f32::MIN);
+    let (min, max): (Vec2f32, Vec2f32) = {
+        let mut min = Vec2f32::new(std::f32::MAX, std::f32::MAX);
+        let mut max = Vec2f32::new(std::f32::MIN, std::f32::MIN);
         for segment in &segments {
             min.x = min.x.min(segment.start.x).min(segment.end.x);
             min.y = min.y.min(segment.start.y).min(segment.end.y);

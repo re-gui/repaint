@@ -15,6 +15,7 @@
         "Polyline",
         "polylines",
         "rasterization",
+        "rasterizer",
         "Rgbaf",
         "Rgbf",
         "Skia"

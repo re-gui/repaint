@@ -1,0 +1,11 @@
+[package]
+name = "repaint-piet-svg"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+piet = "0.6.2"
+repaint = { version = "0.1.0", path = "../../repaint" }
+
+[dev-dependencies]
+piet-svg = "0.6.2"

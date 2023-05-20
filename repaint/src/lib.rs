@@ -32,6 +32,8 @@ fn render(canvas: &mut dyn canvas::Canvas) {
 
 */
 
+//#![warn(missing_docs)]
+
 pub mod base;
 pub mod utils;
 pub mod canvas;

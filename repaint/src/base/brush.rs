@@ -2,6 +2,7 @@ use super::paint::Paint;
 
 
 
+/// A brush used to paint a shape.
 pub struct Brush {
     /// The paint used to draw the brush.
     pub paint: Paint,

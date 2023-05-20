@@ -7,7 +7,8 @@ use crate::{Painter, base::{transform::Transform2d, shapes::Shape}};
 #[cfg_attr(doc, katexit::katexit)]
 /// Methods related to transformations and clipping.
 pub trait TransformMethods {
-    fn with_save(&mut self, f: &mut dyn FnOnce(&mut dyn Painter));
+    /// TODO doc
+    fn with_save<'a>(&'a mut self) -> Box<dyn Painter>;
 
     /// Transforms the painter's coordinate system.
     /// 
@@ -15,7 +16,8 @@ pub trait TransformMethods {
     /// The new transformation matrix will be $T \cdot M$.
     fn transform(&mut self, transform: &Transform2d) -> Result<(), TransformError>;
 
-    fn clip(&self, shape: Shape) -> Result<(), ClipError>;
+    /// TODO ???
+    fn clip(&self, shape: &dyn Shape) -> Result<(), ClipError>;
 }
 
 /// Error that could occur when transforming the painter's coordinate system.

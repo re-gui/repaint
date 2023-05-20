@@ -1,7 +1,7 @@
 
 use crate::base::{
     clipping::clip_line,
-    defs::rect::{FRect, Rect},
+    defs::rect::{F32Rect, Rect, F64Rect},
 };
 use crate::base::defs::linalg::*;
 
@@ -21,8 +21,8 @@ use crate::base::defs::linalg::*;
 ///  - this algorithm is not optimized for vertical or horizontal lines, yet
 ///  - this algorithm might have some bugs, to check
 pub fn line<F: FnMut(u32, u32) -> ()>(
-    start: &Vec2f,
-    end: &Vec2f,
+    start: &Vec2f32,
+    end: &Vec2f32,
     plot: &mut F,
     rect: &Rect<u32>,
 ) -> () {
@@ -31,13 +31,13 @@ pub fn line<F: FnMut(u32, u32) -> ()>(
         return;
     }
 
-    let f_rect = FRect {
-        min: Vec2f::new(rect.min.x as f32, rect.min.y as f32),
-        max: Vec2f::new(rect.max.x as f32, rect.max.y as f32),
+    let f_rect = F32Rect {
+        min: Vec2f32::new(rect.min.x as f32, rect.min.y as f32),
+        max: Vec2f32::new(rect.max.x as f32, rect.max.y as f32),
     };
 
-    if let Some((clipped_start, clipped_end)) = clip_line(&start, &end, &f_rect) {
-        let sanitize_vec = |v: Vec2f| -> Vec2u32 {
+    if let Some((clipped_start, clipped_end)) = clip_line(&start.cast(), &end.cast(), &F64Rect::new(f_rect.min.cast(), f_rect.max.cast())) {
+        let sanitize_vec = |v: Vec2f32| -> Vec2u32 {
             Vec2u32::new(
                 (v.x.max(0.0).round() as u32)
                     .max(rect.min.x)
@@ -48,8 +48,8 @@ pub fn line<F: FnMut(u32, u32) -> ()>(
             )
         };
 
-        let start = sanitize_vec(clipped_start);
-        let end = sanitize_vec(clipped_end);
+        let start = sanitize_vec(clipped_start.cast());
+        let end = sanitize_vec(clipped_end.cast());
 
         // if the line is a point, plot it
         if start == end {
