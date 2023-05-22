@@ -327,7 +327,6 @@ impl Default for BlendMode {
 pub mod modes_impl {
     //use super::*;
     use crate::base::defs::colors::default_color_types::RgbaFColor;
-    use crate::base::defs::colors::default_colors;
 
     /// Standard Blending Formula
     #[inline]
@@ -353,7 +352,7 @@ pub mod modes_impl {
     /// Implementation of [`BlendMode::Clear`](`super::BlendMode::Clear`).
     #[inline]
     pub fn clear(_src: &RgbaFColor, dst: &mut RgbaFColor) {
-        *dst = default_colors::TRANSPARENT;
+        *dst = RgbaFColor::TRANSPARENT;
     }
 
     /// Implementation of [`BlendMode::Src`](`super::BlendMode::Src`).

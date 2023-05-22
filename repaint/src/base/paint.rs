@@ -3,6 +3,7 @@ use crate::base::defs::colors::default_color_types::RgbaFColor;
 
 use super::{blending::BlendMode};
 
+#[derive(Clone, Debug, PartialEq)]
 pub struct Paint {
     pub ink: Ink,
     // ??? pub antialias_mode: AntialiasMode,
@@ -20,6 +21,10 @@ impl Default for Paint {
     }
 }
 
+// TODO move
+pub type Color = RgbaFColor;
+
+#[derive(Clone, Debug, PartialEq)]
 pub enum Ink {
     /// No ink, nothing is painted.
     None,
@@ -28,9 +33,9 @@ pub enum Ink {
     Color(RgbaFColor),
 
     /// The ink is a shader.
-    Shader,
+    Shader, // TODO
 
-    // TODO image, 1d image, etc...
+    // TODO gradient, image, 1d image, etc...
 }
 
 

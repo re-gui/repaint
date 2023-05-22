@@ -47,6 +47,10 @@ where
         return Self::new_checked(pos, pos + size);
     }
 
+    pub fn from_xywh(x: T, y: T, width: T, height: T) -> Rect<T> {
+        Self::from_pos_and_size(Vector2::new(x, y), Vector2::new(width, height))
+    }
+
     /// Creates a new rectangle from a position and size.
     /// If the size is negative, the rectangle is inverted.
     pub fn from_pos_and_size_coords(x: T, y: T, width: T, height: T) -> Rect<T> {
@@ -153,6 +157,15 @@ where
 
     fn bottom_right(&self) -> Vector2<T> {
         self.max
+    }
+}
+
+impl<T> From<(T, T, T, T)> for Rect<T>
+where
+    T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + SubAssign + PartialOrd,
+{
+    fn from(value: (T, T, T, T)) -> Self {
+        Self::from_xywh(value.0, value.1, value.2, value.3)
     }
 }
 

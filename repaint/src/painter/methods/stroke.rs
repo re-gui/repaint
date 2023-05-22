@@ -1,39 +1,75 @@
-use crate::base::{defs::linalg::Vec2f64, paint::Paint, pen::Pen, shapes::{path::PathCommand, Shape}};
+use crate::base::{defs::linalg::Vec2f64, paint::{Paint, Color, Ink}, pen::Pen, shapes::{path::PathCommand, Shape}};
 
 use super::TransformMethods;
 
+#[derive(Clone, Debug, PartialEq)]
+pub enum PaintStyle {
+    Stroke(Pen),
+    Fill(Paint),
+    StrokeAndFill(Pen),
+}
 
-/// Methods for stroking paths.
+impl PaintStyle {
+    pub fn paint(&self) -> &Paint {
+        match self {
+            PaintStyle::Stroke(pen) | Self::StrokeAndFill(pen) => &pen.paint,
+            PaintStyle::Fill(paint) => paint,
+        }
+    }
+
+    pub fn paint_mut(&mut self) -> &mut Paint {
+        match self {
+            PaintStyle::Stroke(pen) | Self::StrokeAndFill(pen) => &mut pen.paint,
+            PaintStyle::Fill(paint) => paint,
+        }
+    }
+}
+
+// TODO instead of f32 or f64 for points, we could make an enum to discriminate between integer and floating point coordinates...
+
 pub trait StrokingMethods: TransformMethods {
 
-    /// Tells if this painter can stroke
-    fn can_stroke(&self) -> bool;
+    fn point(
+        &mut self,
+        pos: Vec2f64,
+        style: PaintStyle,
+    );
 
-    /// Draw a point at `pos`.
-    /// 
-    /// # Arguments
-    /// 
-    /// * `pos` - The position of the point to draw.
-    /// * `paint` - Pa to use for drawing the point.
-    fn draw_point(&mut self, pos: Vec2f64, paint: &Paint);
+    fn pixel(
+        &mut self,
+        pos: Vec2f64,
+        ink: Ink,
+    );
 
-    /// Draw a line from `start` to `end`.
-    /// 
-    /// # Arguments
-    /// 
-    /// * `start` - The start position of the line.
-    /// * `end` - The end position of the line.
-    /// * `pen` - pen to use for drawing the line.
-    fn stroke_line(&mut self, start: Vec2f64, end: Vec2f64, pen: &Pen);
+    fn line(
+        &mut self,
+        start: Vec2f64,
+        end: Vec2f64,
+        pen: &Pen,
+    );
 
-    /// Stroke a path.
-    /// 
-    /// # Arguments
-    /// 
-    /// * `path` - iterator over the path commands.
-    /// * `pen` - pen to use for drawing the path.
-    fn stroke_path(&mut self, path: &mut dyn Iterator<Item = &PathCommand>, pen: &Pen);
+    fn path(
+        &mut self,
+        path: &mut dyn Iterator<Item = PathCommand>,
+        style: PaintStyle,
+    );
 
-    /// Stroke a shape
-    fn stroke_shape(&mut self, shape: &dyn Shape, pen: &Pen);
+    //fn stroke_shape(&mut self, shape: &dyn Shape, pen: &Pen) {
+    //    todo!("default implementation")
+    //} // TODO maybe provide default implementation based on stroke_path
+
+    // TODO this feature might not be supported because it is equivalent to the blend mode `Src`
+    fn clear(
+        &mut self,
+        color: Color,
+    );
+
+    fn clear_with(
+        &mut self,
+        paint: &Paint,
+    ) {
+        todo!("default implementation")
+    }
+
+    // TODO clear, example for skia: surface.canvas().clear(Color::WHITE);
 }

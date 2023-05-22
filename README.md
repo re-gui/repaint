@@ -18,3 +18,5 @@ where:
 - "on ...": the implementation is a wrapper around the given crate, 
 - "with ...": the implementation is custom but based on the given crate under the hood.
 - no prefix: the implementation is custom.
+
+> :information_source: the [`repaint-with-skia-safe`](./implementations/skia-safe/) currently has the priority, the `repaint` will be adapted to it and [`repaint-with-skia-safe`](./implementations/skia-safe/) can be considered as the reference implementation: refer to it when in doubt.

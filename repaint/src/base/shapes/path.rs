@@ -89,7 +89,7 @@ pub enum PathCommand {
     /// Draw a cubic Bezier curve to a point.
     ///
     /// TODO ...
-    CubicBezierCurveTo {
+    CubicBezierTo {
         /// The first control point.
         control_pt_1: Vec2f64,
         /// The second control point.
@@ -101,7 +101,7 @@ pub enum PathCommand {
     /// Draw a cubic Bezier curve to a point relative to the current position.
     ///
     /// TODO ...
-    CubicBezierCurveToOffset {
+    CubicBezierToOffset {
         /// The first control point.
         control_pt_1_offset: Vec2f64,
         /// The second control point.
@@ -377,13 +377,13 @@ impl SvgStylePathCommand {
             SvgStylePathCommand::V(y) => PathCommand::VerticalLineTo(*y),
             SvgStylePathCommand::v(dy) => PathCommand::VerticalLineToOffset(*dy),
             SvgStylePathCommand::Z | SvgStylePathCommand::z => PathCommand::ClosePath,
-            SvgStylePathCommand::C(x1, y1, x2, y2, x, y) => PathCommand::CubicBezierCurveTo {
+            SvgStylePathCommand::C(x1, y1, x2, y2, x, y) => PathCommand::CubicBezierTo {
                 control_pt_1: Vec2f64::new(*x1, *y1),
                 control_pt_2: Vec2f64::new(*x2, *y2),
                 end_pt: Vec2f64::new(*x, *y),
             },
             SvgStylePathCommand::c(dx1, dy1, dx2, dy2, dx, dy) => {
-                PathCommand::CubicBezierCurveToOffset {
+                PathCommand::CubicBezierToOffset {
                     control_pt_1_offset: Vec2f64::new(*dx1, *dy1),
                     control_pt_2_offset: Vec2f64::new(*dx2, *dy2),
                     end_pt_offset: Vec2f64::new(*dx, *dy),
@@ -663,7 +663,7 @@ pub mod discretization {
                             return self.next(); // TODO or maybe return MoveTo?
                         }
                     }
-                    PathCommand::CubicBezierCurveTo {
+                    PathCommand::CubicBezierTo {
                         control_pt_1,
                         control_pt_2,
                         end_pt,
@@ -682,7 +682,7 @@ pub mod discretization {
                         self.state.subpath_iterator = Some(discretizer);
                         return self.next();
                     }
-                    PathCommand::CubicBezierCurveToOffset {
+                    PathCommand::CubicBezierToOffset {
                         control_pt_1_offset,
                         control_pt_2_offset,
                         end_pt_offset,

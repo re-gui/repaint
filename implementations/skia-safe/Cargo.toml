@@ -1,0 +1,10 @@
+[package]
+name = "repaint-with-skia-safe"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+repaint = { version = "0.1.0", path = "../../repaint" }
+skia-safe = "0.62.0"

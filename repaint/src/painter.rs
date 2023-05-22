@@ -27,7 +27,7 @@ use crate::Canvas;
 ///  * Although a [`Painter`] is just a trait, it is conceptually useful to keep in mind
 ///    that painters are not meant to be isolated objects, but they should exist in relation
 ///    to some [`Canvas`] they *paint* on.
-pub trait Painter: BlendModeMethods + AntialiasMethods + TransformMethods + StrokingMethods + FillingMethods + BasicShapesMethods {
+pub trait Painter: BlendModeMethods + AntialiasMethods + TransformMethods + StrokingMethods + BasicShapesMethods {
     /// Get the canvas that this painter is drawing to.
     /// 
     /// The canvas is borrowed/owned by the painter and it cannot be accessed

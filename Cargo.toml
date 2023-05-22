@@ -3,6 +3,7 @@
 members = [
     "repaint",
     "implementations/piet-svg",
+    "implementations/skia-safe",
 ]
 
 default-members = [

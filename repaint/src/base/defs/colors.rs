@@ -448,23 +448,25 @@ pub mod default_colors {
 
     use super::default_color_types::RgbaFColor;
 
-    pub const TRANSPARENT: RgbaFColor = RgbaFColor::new(0.0, 0.0, 0.0, 0.0);
-    pub const BLACK: RgbaFColor = RgbaFColor::new(0.0, 0.0, 0.0, 1.0);
-    pub const WHITE: RgbaFColor = RgbaFColor::new(1.0, 1.0, 1.0, 1.0);
-    pub const GRAY: RgbaFColor = RgbaFColor::new(0.5, 0.5, 0.5, 1.0);
-    pub const GRAY_SEMI: RgbaFColor = RgbaFColor::new(0.5, 0.5, 0.5, 0.5);
+    impl RgbaFColor {
+        pub const TRANSPARENT: RgbaFColor = RgbaFColor::new(0.0, 0.0, 0.0, 0.0);
+        pub const BLACK: RgbaFColor = RgbaFColor::new(0.0, 0.0, 0.0, 1.0);
+        pub const WHITE: RgbaFColor = RgbaFColor::new(1.0, 1.0, 1.0, 1.0);
+        pub const GRAY: RgbaFColor = RgbaFColor::new(0.5, 0.5, 0.5, 1.0);
+        pub const GRAY_SEMI: RgbaFColor = RgbaFColor::new(0.5, 0.5, 0.5, 0.5);
 
-    pub const RED: RgbaFColor = RgbaFColor::new(1.0, 0.0, 0.0, 1.0);
-    pub const GREEN: RgbaFColor = RgbaFColor::new(0.0, 1.0, 0.0, 1.0);
-    pub const BLUE: RgbaFColor = RgbaFColor::new(0.0, 0.0, 1.0, 1.0);
+        pub const RED: RgbaFColor = RgbaFColor::new(1.0, 0.0, 0.0, 1.0);
+        pub const GREEN: RgbaFColor = RgbaFColor::new(0.0, 1.0, 0.0, 1.0);
+        pub const BLUE: RgbaFColor = RgbaFColor::new(0.0, 0.0, 1.0, 1.0);
 
-    pub const YELLOW: RgbaFColor = RgbaFColor::new(1.0, 1.0, 0.0, 1.0);
-    pub const CYAN: RgbaFColor = RgbaFColor::new(0.0, 1.0, 1.0, 1.0);
-    pub const MAGENTA: RgbaFColor = RgbaFColor::new(1.0, 0.0, 1.0, 1.0);
+        pub const YELLOW: RgbaFColor = RgbaFColor::new(1.0, 1.0, 0.0, 1.0);
+        pub const CYAN: RgbaFColor = RgbaFColor::new(0.0, 1.0, 1.0, 1.0);
+        pub const MAGENTA: RgbaFColor = RgbaFColor::new(1.0, 0.0, 1.0, 1.0);
 
-    pub const ORANGE: RgbaFColor = RgbaFColor::new(1.0, 0.5, 0.0, 1.0);
-    pub const PURPLE: RgbaFColor = RgbaFColor::new(0.5, 0.0, 1.0, 1.0);
-    pub const PINK: RgbaFColor = RgbaFColor::new(1.0, 0.0, 0.5, 1.0);
+        pub const ORANGE: RgbaFColor = RgbaFColor::new(1.0, 0.5, 0.0, 1.0);
+        pub const PURPLE: RgbaFColor = RgbaFColor::new(0.5, 0.0, 1.0, 1.0);
+        pub const PINK: RgbaFColor = RgbaFColor::new(1.0, 0.0, 0.5, 1.0);
+    }
 }
 
 /// Convert a color from RGB to HSL.

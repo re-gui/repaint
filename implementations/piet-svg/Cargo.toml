@@ -1,5 +1,5 @@
 [package]
-name = "repaint-piet-svg"
+name = "repaint-with-piet-svg" # TODO rename to repaint-with-piet because it should not be specific to svg
 version = "0.1.0"
 edition = "2021"
 

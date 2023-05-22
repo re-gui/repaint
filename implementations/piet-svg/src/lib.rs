@@ -134,15 +134,15 @@ where
         true
     }
 
-    fn draw_point(&mut self, pos: Vec2f64, paint: &Paint) {
+    fn point(&mut self, pos: Vec2f64, paint: &Paint) {
         todo!()
     }
 
-    fn stroke_line(&mut self, start: Vec2f64, end: Vec2f64, pen: &repaint::base::pen::Pen) {
+    fn line(&mut self, start: Vec2f64, end: Vec2f64, pen: &repaint::base::pen::Pen) {
         todo!()
     }
 
-    fn stroke_path(&mut self, path: &mut dyn Iterator<Item = &repaint::base::shapes::path::PathCommand>, pen: &repaint::base::pen::Pen) {
+    fn path(&mut self, path: &mut dyn Iterator<Item = &repaint::base::shapes::path::PathCommand>, pen: &repaint::base::pen::Pen) {
         todo!()
     }
 

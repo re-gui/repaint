@@ -1,7 +1,7 @@
 use super::paint::Paint;
 
 
-
+#[derive(Clone, Debug, PartialEq)]
 pub struct Pen {
     // The paint used to draw the stroke
     pub paint: Paint,
@@ -38,10 +38,12 @@ impl From<Paint> for Pen {
     }
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum PathEffect {
     None
 }
 
+#[derive(Clone, Debug, PartialEq)]
 pub enum StrokeWidth {
     Constant(f32),
 }

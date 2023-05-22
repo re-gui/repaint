@@ -32,7 +32,7 @@ fn main() {
     let path: Vec<pp::PathCommand> = vec![
         pc::MoveTo(Vec2f64::new(0.0, 0.0)),
         pc::LineTo(Vec2f64::new(100.0, 0.0)),
-        pc::CubicBezierCurveTo {
+        pc::CubicBezierTo {
             control_pt_1: Vec2f64::new(100.0, 100.0),
             control_pt_2: Vec2f64::new(0.0, 100.0),
             end_pt: Vec2f64::new(0.0, 0.0),
