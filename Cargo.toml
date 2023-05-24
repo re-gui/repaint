@@ -2,7 +2,6 @@
 
 members = [
     "repaint",
-    "implementations/piet-svg",
     "implementations/skia-safe",
 ]
 

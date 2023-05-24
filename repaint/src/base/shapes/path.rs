@@ -1,4 +1,57 @@
-use crate::base::defs::linalg::*;
+use std::{marker::PhantomData, any::Any, path::Iter};
+
+use crate::{base::defs::linalg::*, resource::PainterResource, Painter};
+
+pub struct PathResource<'context_lifecycle>(pub PainterResource<'context_lifecycle, dyn Any>);
+
+pub enum Path<'context_lifecycle, 'a> {
+    Resource(&'a PathResource<'context_lifecycle>),
+    SourceIterator(&'a mut dyn Iterator<Item = PathCommand>),
+    Any(&'a dyn Any),
+    AnyMut(&'a mut dyn Any),
+    // TODO form any to pass specific data and a method in paiter to get info
+    // and additional specific info with any and dynamic cast
+}
+
+impl<'context_lifecycle, 'a> Path<'context_lifecycle, 'a> {
+    // TODO by copilot, check this two function
+    pub fn from_any<T: 'static>(source: &'a T) -> Self {
+        Self::Any(source)
+    }
+    pub fn from_any_mut<T: 'static>(source: &'a mut T) -> Self {
+        Self::AnyMut(source)
+    }
+}
+
+impl<'context_lifecycle, 'a> From<&'a PathResource<'context_lifecycle>> for Path<'context_lifecycle, 'a> {
+    fn from(source: &'a PathResource<'context_lifecycle>) -> Self {
+        Self::Resource(source)
+    }
+}
+
+impl<'context_lifecycle, 'a> From<&'a mut dyn Iterator<Item = PathCommand>> for Path<'context_lifecycle, 'a> {
+    fn from(source: &'a mut dyn Iterator<Item = PathCommand>) -> Self {
+        Self::SourceIterator(source)
+    }
+}
+
+pub struct PathBuilder {
+    pub commands: Vec<PathCommand>,
+}
+
+impl PathBuilder {
+    pub fn new() -> Self {
+        Self {
+            commands: Vec::new(),
+        }
+    }
+
+    pub fn push(&mut self, command: PathCommand) {
+        self.commands.push(command);
+    }
+
+    // TODO skia-like methods e.g. move_to, line_to, etc.
+}
 
 /// A command for a path.
 ///

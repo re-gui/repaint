@@ -8,6 +8,7 @@ pub struct Paint {
     pub ink: Ink,
     // ??? pub antialias_mode: AntialiasMode,
     pub blend_mode: BlendMode,
+    pub anti_alias: bool,
     // TODO filters, etc...
     // see https://skia.org/docs/user/api/skpaint_overview/
 }
@@ -17,6 +18,7 @@ impl Default for Paint {
         Paint {
             ink: Ink::None,
             blend_mode: BlendMode::default(),
+            anti_alias: false,
         }
     }
 }

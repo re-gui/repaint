@@ -1,22 +1,30 @@
-use repaint::{Canvas, Painter, painter::methods::{BasicShapesMethods, TransformMethods, StrokingMethods, AntialiasMethods, BlendModeMethods}, base::{defs::linalg::Vec2f64, paint::Paint, pen::Pen, blending::BlendMode, shapes::{path::PathCommand, Shape}, transform::Transform2d}};
+use painter::SkiaContext;
+use repaint::{Canvas, Painter, painter::methods::{BasicShapesMethods, TransformMethods, DrawingMethods, AntialiasMethods, BlendModeMethods}, base::{defs::linalg::Vec2f64, paint::Paint, pen::Pen, blending::BlendMode, shapes::{path::PathCommand, Shape}, transform::Transform2d}};
 use skia_safe::Surface;
 
 mod painter;
 
-pub struct SkiaCanvas<'surface> {
-    surface: &'surface mut Surface,
+// TODO move
+pub fn make_skia_context<'context_lifetime>(lifetime: &'context_lifetime ()) -> SkiaContext<'context_lifetime> {
+    SkiaContext::new(lifetime)
 }
 
-impl<'surface> SkiaCanvas<'surface> {
-    pub fn new(surface: &'surface mut Surface) -> Self {
+pub struct SkiaCanvas<'surface, 'context, 'context_lifecycle> {
+    surface: &'surface mut Surface,
+    context: &'context mut SkiaContext<'context_lifecycle>,
+}
+
+impl<'surface, 'context, 'context_lifecycle> SkiaCanvas<'surface, 'context, 'context_lifecycle> {
+    pub fn new(surface: &'surface mut Surface, context: &'context mut SkiaContext<'context_lifecycle>) -> Self {
         Self {
             surface,
+            context,
         }
     }
 }
 
-impl<'surface> Canvas for SkiaCanvas<'surface> {
-    fn painter<'s>(&'s mut self) -> Result<Box<dyn repaint::Painter + 's>, repaint::canvas::GetPainterError> {
+impl<'surface, 'context, 'context_lifecycle> Canvas<'context_lifecycle> for SkiaCanvas<'surface, 'context, 'context_lifecycle> {
+    fn painter<'s>(&'s mut self) -> Result<Box<dyn repaint::Painter<'context_lifecycle> + 's>, repaint::canvas::GetPainterError> {
         let painter = SkiaPainter {
             canvas: self,
         };
@@ -28,13 +36,13 @@ impl<'surface> Canvas for SkiaCanvas<'surface> {
     }
 }
 
-pub struct SkiaPainter<'canvas, 'surface> {
-    canvas: &'canvas mut SkiaCanvas<'surface>,
+pub struct SkiaPainter<'canvas, 'surface, 'context, 'context_lifecycle> {
+    canvas: &'canvas mut SkiaCanvas<'surface, 'context, 'context_lifecycle>,
 }
 
 
 mod conversions {
-    use repaint::{base::{defs::colors::default_color_types::RgbaFColor, paint::{Paint, Ink, Color}, blending::BlendMode}, painter::methods::PaintStyle};
+    use repaint::{base::{defs::colors::default_color_types::RgbaFColor, paint::{Paint, Ink, Color}, blending::BlendMode, pen::{StrokeWidth, PenCap}}, painter::methods::PaintStyle};
 
     pub fn color_to_skia_color(color: RgbaFColor) -> skia_safe::Color4f {
         skia_safe::Color4f {
@@ -97,8 +105,18 @@ mod conversions {
             PaintStyle::StrokeAndFill(_) => SkiaPaintStyle::StrokeAndFill,
         });
 
-        // TODO width and path effect
-        sk_paint.set_anti_alias(true);
+        if let PaintStyle::Stroke(pen) = style {
+            match pen.stroke_width {
+                StrokeWidth::Normal(width) => sk_paint.set_stroke_width(width),
+                StrokeWidth::Hairline => sk_paint.set_stroke_width(0.0),
+                StrokeWidth::Cosmetic(_width) => sk_paint.set_stroke_width(0.0), // TODO Skia doesn't support cosmetic stroke width
+            };
+            match pen.cap {
+                PenCap::Butt => sk_paint.set_stroke_cap(skia_safe::PaintCap::Butt),
+                PenCap::Round => sk_paint.set_stroke_cap(skia_safe::PaintCap::Round),
+                PenCap::Square => sk_paint.set_stroke_cap(skia_safe::PaintCap::Square),
+            };
+        }
 
         sk_paint
     }
@@ -113,6 +131,10 @@ mod conversions {
                 todo!()
             },
         };
+
+        // TODO bleand mode
+
+        sk_paint.set_anti_alias(paint.anti_alias);
     }
 }
 

@@ -3,7 +3,7 @@ use repaint::{painter::methods::TransformMethods, base::{transform::Transform2d,
 use crate::SkiaPainter;
 
 
-impl<'canvas, 'surface> TransformMethods for SkiaPainter<'canvas, 'surface> {
+impl<'canvas, 'surface, 'context, 'context_lifecycle> TransformMethods for SkiaPainter<'canvas, 'surface, 'context, 'context_lifecycle> {
     fn with_save<'a>(&'a mut self) -> Box<dyn Painter> {
         todo!()
     }

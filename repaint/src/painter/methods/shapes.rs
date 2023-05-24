@@ -1,17 +1,17 @@
 use crate::base::{pen::Pen, defs::rect::{F64Rect, VideoRect}, paint::Paint, shapes::path::PathCommand};
 
-use super::{StrokingMethods, PaintStyle};
+use super::{DrawingMethods, PaintStyle};
 
 
 /// Methods for drawing basic shapes.
-pub trait BasicShapesMethods: StrokingMethods {
+pub trait BasicShapesMethods: DrawingMethods {
     /// Draw a rectangle.
     fn rect(
         &mut self,
         rect: F64Rect,
         style: PaintStyle,
     ) {
-        self.path(
+        self.draw_path_iter(
             &mut rect_to_path(rect).iter().cloned(),
             style,
         );

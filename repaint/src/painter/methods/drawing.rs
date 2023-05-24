@@ -1,4 +1,4 @@
-use crate::base::{defs::linalg::Vec2f64, paint::{Paint, Color, Ink}, pen::Pen, shapes::{path::PathCommand, Shape}};
+use crate::base::{defs::linalg::Vec2f64, paint::{Paint, Color, Ink}, pen::Pen, shapes::{path::{PathCommand, Path, PathResource}, Shape}};
 
 use super::TransformMethods;
 
@@ -27,7 +27,7 @@ impl PaintStyle {
 
 // TODO instead of f32 or f64 for points, we could make an enum to discriminate between integer and floating point coordinates...
 
-pub trait StrokingMethods: TransformMethods {
+pub trait DrawingMethods: TransformMethods {
 
     fn point(
         &mut self,
@@ -48,9 +48,11 @@ pub trait StrokingMethods: TransformMethods {
         pen: &Pen,
     );
 
-    fn path(
-        &mut self,
-        path: &mut dyn Iterator<Item = PathCommand>,
+    fn path(&mut self, path: &PathResource, style: PaintStyle);
+
+    fn draw_path_iter<'s, 'a>(
+        &'s mut self,
+        path_iter: &mut dyn Iterator<Item = PathCommand>,
         style: PaintStyle,
     );
 
