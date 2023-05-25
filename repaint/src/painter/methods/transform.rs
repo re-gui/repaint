@@ -2,24 +2,7 @@ use std::error::Error;
 
 use strum::Display;
 
-use crate::{Painter, base::{transform::Transform2d, shapes::Shape}};
-
-#[cfg_attr(doc, katexit::katexit)]
-/// Methods related to transformations and clipping.
-pub trait TransformMethods {
-    /// TODO doc
-    fn with_save<'a>(&'a mut self) -> Box<dyn Painter>;
-
-    /// Transforms the painter's coordinate system.
-    /// 
-    /// Let $T$ be the current transformation matrix and $M$ the given transformation matrix.
-    /// The new transformation matrix will be $T \cdot M$.
-    fn transform(&mut self, transform: &Transform2d) -> Result<(), TransformError>;
-
-    /// TODO ???
-    fn clip(&self, shape: &dyn Shape) -> Result<(), ClipError>;
-}
-
+// TODO move
 /// Error that could occur when transforming the painter's coordinate system.
 #[derive(Debug, Display)]
 pub enum TransformError {
@@ -42,6 +25,7 @@ pub enum TransformError {
 
 impl Error for TransformError {}
 
+// TODO move
 /// Error that could occur when clipping the painter's coordinate system.
 #[derive(Debug, Display)]
 pub enum ClipError {

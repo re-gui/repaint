@@ -1,7 +1,3 @@
-use std::{any::Any, rc::Rc, cell::RefCell};
-
-use crate::Painter;
-
 
 
 /*pub trait AbstractPainterResource {}

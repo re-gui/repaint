@@ -1,28 +1,10 @@
-use crate::base::{pen::Pen, defs::rect::{F64Rect, VideoRect}, paint::Paint, shapes::path::PathCommand};
-
-use super::{DrawingMethods, PaintStyle};
+use crate::base::{defs::rect::{F64Rect, VideoRect}, shapes::path::PathCommand};
 
 
-/// Methods for drawing basic shapes.
-pub trait BasicShapesMethods: DrawingMethods {
-    /// Draw a rectangle.
-    fn rect(
-        &mut self,
-        rect: F64Rect,
-        style: PaintStyle,
-    ) {
-        self.draw_path_iter(
-            &mut rect_to_path(rect).iter().cloned(),
-            style,
-        );
-    }
 
-    // TODO ...
-}
-
-
+// TODO move
 /// Convert a rectangle to a path.
-fn rect_to_path(rect: F64Rect) -> [PathCommand; 5] {
+pub fn rect_to_path(rect: F64Rect) -> [PathCommand; 5] {
     // TODO move this to the path module
     [
         PathCommand::MoveTo(rect.top_left()),

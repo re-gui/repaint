@@ -1,6 +1,6 @@
 use std::{error::Error, fs::File, io::Write, cell::RefCell, borrow::{Borrow, BorrowMut}};
 
-use repaint::{Canvas, base::{paint::{Color, Paint, Ink}, pen::{Pen, PenCap}, defs::rect::F64Rect, shapes::path::{PathBuilder, PathCommand}}, painter::{methods::PaintStyle, Context}, nalgebra::Vector2};
+use repaint::{Canvas, base::{paint::{Color, Paint, Ink}, pen::{Pen, PenCap}, defs::rect::F64Rect, shapes::path::{PathBuilder, PathCommand}}, painter::{methods::PaintStyle, Context}, nalgebra::Vector2, Painter};
 use repaint_with_skia_safe::{SkiaCanvas, make_skia_context};
 use skia_safe::{Surface, EncodedImageFormat};
 
@@ -13,10 +13,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     surface.canvas().clear(skia_safe::Color::WHITE);
 
     {
-        let tmp = ();
-        let mut ctx = make_skia_context(&tmp);
+        let mut ctx = RefCell::new(make_skia_context());
 
-        let mut canvas = SkiaCanvas::new(&mut surface, &mut ctx);
+        let mut canvas = SkiaCanvas::new(&mut surface, &ctx);
         let mut painter = canvas.painter().unwrap();
 
         painter.clear(Color::WHITE);
@@ -40,7 +39,7 @@ fn main() -> Result<(), Box<dyn Error>> {
         builder.push(PathCommand::MoveTo(Vector2::new(20.0, 20.0)));
         builder.push(PathCommand::LineTo(Vector2::new(40.0, 42.0)));
 
-        let res = painter.context_mut().make_path(&mut builder.commands.iter().cloned()).unwrap();
+        let res = painter.make_path(&mut builder.commands.iter().cloned()).unwrap();
         //let res = ctx.make_path(&mut builder.commands.iter().cloned()).unwrap();
         painter.path(&res, PaintStyle::Stroke(pen));
     }

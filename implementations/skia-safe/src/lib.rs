@@ -1,21 +1,24 @@
+use std::cell::RefCell;
+
 use painter::SkiaContext;
-use repaint::{Canvas, Painter, painter::methods::{BasicShapesMethods, TransformMethods, DrawingMethods, AntialiasMethods, BlendModeMethods}, base::{defs::linalg::Vec2f64, paint::Paint, pen::Pen, blending::BlendMode, shapes::{path::PathCommand, Shape}, transform::Transform2d}};
+use repaint::{Canvas, Painter, painter::methods, base::{defs::linalg::Vec2f64, paint::Paint, pen::Pen, blending::BlendMode, shapes::{path::PathCommand, Shape}, transform::Transform2d}};
 use skia_safe::Surface;
 
 mod painter;
 
 // TODO move
-pub fn make_skia_context<'context_lifetime>(lifetime: &'context_lifetime ()) -> SkiaContext<'context_lifetime> {
-    SkiaContext::new(lifetime)
+pub fn make_skia_context() -> SkiaContext {
+    SkiaContext::new()
 }
 
-pub struct SkiaCanvas<'surface, 'context, 'context_lifecycle> {
+pub struct SkiaCanvas<'surface, 'context: 'surface>
+{
     surface: &'surface mut Surface,
-    context: &'context mut SkiaContext<'context_lifecycle>,
+    context: &'context RefCell<SkiaContext>,
 }
 
-impl<'surface, 'context, 'context_lifecycle> SkiaCanvas<'surface, 'context, 'context_lifecycle> {
-    pub fn new(surface: &'surface mut Surface, context: &'context mut SkiaContext<'context_lifecycle>) -> Self {
+impl<'surface, 'context> SkiaCanvas<'surface, 'context> {
+    pub fn new(surface: &'surface mut Surface, context: &'context RefCell<SkiaContext>) -> Self {
         Self {
             surface,
             context,
@@ -23,26 +26,46 @@ impl<'surface, 'context, 'context_lifecycle> SkiaCanvas<'surface, 'context, 'con
     }
 }
 
-impl<'surface, 'context, 'context_lifecycle> Canvas<'context_lifecycle> for SkiaCanvas<'surface, 'context, 'context_lifecycle> {
-    fn painter<'s>(&'s mut self) -> Result<Box<dyn repaint::Painter<'context_lifecycle> + 's>, repaint::canvas::GetPainterError> {
+impl<'surface, 'context: 'surface> Canvas<'context> for SkiaCanvas<'surface, 'context> {
+    type Painter<'canvas> = SkiaPainter<'canvas, 'surface, 'context> where Self: 'canvas;
+
+    fn painter<'s>(&'s mut self) -> Result<Self::Painter<'s>, repaint::canvas::GetPainterError> {
         let painter = SkiaPainter {
             canvas: self,
         };
 
-        Ok(Box::new(painter))
+        Ok(painter)
     }
+
     fn shape(&self) -> Box<dyn Shape> {
         todo!()
     }
+
+    //fn painter<'s>(&'s mut self) -> Result<Box<dyn repaint::Painter<'context> + 's>, repaint::canvas::GetPainterError> {
+    //    let painter = SkiaPainter {
+    //        canvas: self,
+    //    };
+//
+    //    Ok(Box::new(painter))
+    //}
+    //fn shape(&self) -> Box<dyn Shape> {
+    //    todo!()
+    //}
 }
 
-pub struct SkiaPainter<'canvas, 'surface, 'context, 'context_lifecycle> {
-    canvas: &'canvas mut SkiaCanvas<'surface, 'context, 'context_lifecycle>,
+pub struct SkiaPainter<'canvas, 'surface, 'context> {
+    canvas: &'canvas mut SkiaCanvas<'surface, 'context>,
 }
 
+impl<'canvas, 'surface, 'context> SkiaPainter<'canvas, 'surface, 'context> {
+    //fn canvas<'s>(&'s self) -> &'canvas SkiaCanvas<'surface, 'context> {
+    fn canvas<'s>(&'s self) -> &'canvas SkiaCanvas {
+        self.canvas
+    }
+}
 
 mod conversions {
-    use repaint::{base::{defs::colors::default_color_types::RgbaFColor, paint::{Paint, Ink, Color}, blending::BlendMode, pen::{StrokeWidth, PenCap}}, painter::methods::PaintStyle};
+    use repaint::{base::{defs::colors::default_color_types::RgbaFColor, paint::{Paint, Ink, Color}, blending::BlendMode, pen::{StrokeWidth, PenCap}, shapes::path::PathCommand}, painter::methods::PaintStyle};
 
     pub fn color_to_skia_color(color: RgbaFColor) -> skia_safe::Color4f {
         skia_safe::Color4f {
@@ -135,6 +158,86 @@ mod conversions {
         // TODO bleand mode
 
         sk_paint.set_anti_alias(paint.anti_alias);
+    }
+
+    // TODO move and remove pub
+    pub fn create_skia_path(path_iter: &mut dyn Iterator<Item = PathCommand>) -> skia_safe::Path {
+        let mut sk_path = skia_safe::Path::new();
+
+        for element in path_iter {
+            match element {
+                PathCommand::MoveTo(pos) => sk_path.move_to((pos.x as f32, pos.y as f32)),
+                PathCommand::MoveToOffset(pos) => sk_path.r_move_to((pos.x as f32, pos.y as f32)),
+                PathCommand::LineTo(pos) => sk_path.line_to((pos.x as f32, pos.y as f32)),
+                PathCommand::LineToOffset(pos) => sk_path.r_line_to((pos.x as f32, pos.y as f32)),
+                PathCommand::HorizontalLineTo(x) => sk_path.line_to((x as f32, 0.0)),
+                PathCommand::HorizontalLineToOffset(x) => sk_path.r_line_to((x as f32, 0.0)),
+                PathCommand::VerticalLineTo(y) => sk_path.line_to((0.0, y as f32)),
+                PathCommand::VerticalLineToOffset(y) => sk_path.r_line_to((0.0, y as f32)),
+                PathCommand::ClosePath => sk_path.close(),
+                PathCommand::CubicBezierTo {
+                    control_pt_1,
+                    control_pt_2,
+                    end_pt
+                } => sk_path.cubic_to(
+                    (control_pt_1.x as f32, control_pt_1.y as f32),
+                    (control_pt_2.x as f32, control_pt_2.y as f32),
+                    (end_pt.x as f32, end_pt.y as f32),
+                ),
+                PathCommand::CubicBezierToOffset {
+                    control_pt_1_offset,
+                    control_pt_2_offset,
+                    end_pt_offset
+                } => sk_path.r_cubic_to(
+                    (control_pt_1_offset.x as f32, control_pt_1_offset.y as f32),
+                    (control_pt_2_offset.x as f32, control_pt_2_offset.y as f32),
+                    (end_pt_offset.x as f32, end_pt_offset.y as f32),
+                ),
+                PathCommand::SmoothCubicBezierCurveTo {
+                    control_pt_2,
+                    end_pt
+                } => todo!("SmoothCubicBezierCurveTo"),
+                PathCommand::SmoothCubicBezierCurveToOffset {
+                    control_pt_2_offset,
+                    end_pt_offset
+                } => todo!("SmoothCubicBezierCurveToOffset"),
+                PathCommand::QuadraticBezierCurveTo {
+                    control_pt,
+                    end_pt
+                } => sk_path.quad_to(
+                    (control_pt.x as f32, control_pt.y as f32),
+                    (end_pt.x as f32, end_pt.y as f32),
+                ),
+                PathCommand::QuadraticBezierCurveToOffset {
+                    control_pt_offset,
+                    end_pt_offset
+                } => sk_path.r_quad_to(
+                    (control_pt_offset.x as f32, control_pt_offset.y as f32),
+                    (end_pt_offset.x as f32, end_pt_offset.y as f32),
+                ),
+                PathCommand::SmoothQuadraticBezierCurveTo(end_pt) => todo!("SmoothQuadraticBezierCurveTo"),
+                PathCommand::SmoothQuadraticBezierCurveToOffset(end_pt_offset) => todo!("SmoothQuadraticBezierCurveToOffset"),
+                PathCommand::EllipticalArcTo {
+                    radii,
+                    x_axis_rotation,
+                    large_arc_flag,
+                    sweep_flag,
+                    end_pt
+                } => todo!("EllipticalArcTo"),
+                PathCommand::EllipticalArcToOffset {
+                    radii,
+                    x_axis_rotation,
+                    large_arc_flag,
+                    sweep_flag,
+                    end_pt_offset
+                } => todo!("EllipticalArcToOffset"),
+            }; // TODO following skia, *Offset -> Relative* or something like that
+            // TODO add functions to convert from relative to absolute given the current position,
+            // also handle the smooth case
+            // TODO add a function to convert EllipticalArcTo center parameterization and add center parameterization to PathCommand
+        }
+
+        sk_path
     }
 }
 
