@@ -109,7 +109,9 @@ impl<'canvas, 'surface: 'canvas, 'context: 'canvas + 'surface> Painter<'context>
         path_iter: &mut dyn Iterator<Item = PathCommand>,
         style: repaint::painter::methods::PaintStyle,
     ) {
-        todo!()
+        let path = create_skia_path(path_iter);
+        let paint = paint_style_to_skia_paint(&style);
+        self.canvas.surface.canvas().draw_path(path.as_ref(), &paint);
     }
 
     fn clear(
