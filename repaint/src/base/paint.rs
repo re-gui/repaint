@@ -4,8 +4,8 @@ use crate::base::defs::colors::default_color_types::RgbaFColor;
 use super::{blending::BlendMode};
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Paint {
-    pub ink: Ink,
+pub struct Paint<Color> {
+    pub ink: Ink<Color>,
     // ??? pub antialias_mode: AntialiasMode,
     pub blend_mode: BlendMode,
     pub anti_alias: bool,
@@ -13,7 +13,7 @@ pub struct Paint {
     // see https://skia.org/docs/user/api/skpaint_overview/
 }
 
-impl Default for Paint {
+impl<Color> Default for Paint<Color> {
     fn default() -> Self {
         Paint {
             ink: Ink::None,
@@ -23,21 +23,42 @@ impl Default for Paint {
     }
 }
 
-// TODO move
-pub type Color = RgbaFColor;
+impl<Color> From<Ink<Color>> for Paint<Color> {
+    fn from(ink: Ink<Color>) -> Self {
+        Paint {
+            ink,
+            ..Paint::default()
+        }
+    }
+}
+
+impl<Color> From<Color> for Paint<Color> {
+    fn from(color: Color) -> Self {
+        Paint {
+            ink: Ink::Color(color),
+            ..Paint::default()
+        }
+    }
+}
 
 #[derive(Clone, Debug, PartialEq)]
-pub enum Ink {
+pub enum Ink<Color> {
     /// No ink, nothing is painted.
     None,
 
     /// The ink is a solid color.
-    Color(RgbaFColor),
+    Color(Color),
 
     /// The ink is a shader.
     Shader, // TODO
 
     // TODO gradient, image, 1d image, etc...
+}
+
+impl<Color> From<Color> for Ink<Color> {
+    fn from(color: Color) -> Self {
+        Ink::Color(color)
+    }
 }
 
 

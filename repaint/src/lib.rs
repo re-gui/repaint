@@ -34,6 +34,7 @@ fn render(canvas: &mut dyn canvas::Canvas) {
 
 //#![warn(missing_docs)]
 
+use base::defs::colors::default_color_types::RgbaFColor;
 pub use nalgebra;
 
 pub mod base;
@@ -43,4 +44,9 @@ pub mod painter;
 pub mod resource;
 
 pub use canvas::Canvas;
-pub use painter::Painter;
+pub use painter::BasicPainter;
+
+/// Alias for the [`RgbaFColor`] type.
+///
+/// This alias is exported since it is the most common color type used for gui and graphics.
+pub type Color = RgbaFColor;

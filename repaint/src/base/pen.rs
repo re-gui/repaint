@@ -1,10 +1,10 @@
-use super::paint::Paint;
+use super::{paint::Paint, defs::colors::ColorType};
 
 
 #[derive(Clone, Debug, PartialEq)]
-pub struct Pen {
+pub struct Pen<Color> {
     // The paint used to draw the stroke
-    pub paint: Paint,
+    pub paint: Paint<Color>,
 
     // The path effect to apply to the stroke
     pub path_effect: PathEffect,
@@ -27,7 +27,7 @@ pub enum PenCap {
     Square,
 }
 
-impl Default for Pen {
+impl<Color: ColorType> Default for Pen<Color> {
     fn default() -> Self {
         Pen {
             paint: Paint::default(),
@@ -39,8 +39,8 @@ impl Default for Pen {
     }
 }
 
-impl From<Paint> for Pen {
-    fn from(paint: Paint) -> Self {
+impl<Color: ColorType> From<Paint<Color>> for Pen<Color> {
+    fn from(paint: Paint<Color>) -> Self {
         Pen {
             paint,
             ..Pen::default()

@@ -1,6 +1,6 @@
 use std::rc::Rc;
 
-use repaint::{Painter, Canvas, painter::{Context}, base::shapes::path::PathCommand};
+use repaint::{BasicPainter, Canvas, painter::{Context, WithPathResource, methods::PaintStyle}, base::{shapes::{path::PathCommand, Shape}, defs::{colors::default_color_types::RgbaFColor, linalg::Vec2f64}, paint::{Paint, Ink}, pen::Pen}};
 
 use crate::{SkiaPainter, SkiaCanvas, conversions::{create_skia_path, paint_style_to_skia_paint, color_to_skia_color}};
 
@@ -18,11 +18,6 @@ impl SkiaContext{
 }
 
 impl Context for SkiaContext {
-
-    fn has_path_resources(&self) -> bool {
-        true
-    }
-
     //fn make_path(&mut self, path_iter: &mut dyn Iterator<Item = PathCommand>) -> Result<PathResource<'context>, ()> { // TODO proper error
     //    Ok(PathResource(PainterResource::new(
     //        Rc::new(create_skia_path(path_iter)),
@@ -31,12 +26,12 @@ impl Context for SkiaContext {
     //}
 }
 
-impl<'canvas, 'surface: 'canvas, 'context: 'canvas + 'surface> Painter<'context> for SkiaPainter<'canvas, 'surface, 'context> {
+impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas, 'surface, 'context> {
+    type NativeColor = RgbaFColor;
+
     //type Resources = SkiaResources;
     type Canvas = SkiaCanvas<'surface, 'context>;
     type Context = SkiaContext;
-
-    type Path = skia_safe::Path; // TODO ??
 
     fn canvas(&self) -> &Self::Canvas {
         self.canvas
@@ -62,52 +57,43 @@ impl<'canvas, 'surface: 'canvas, 'context: 'canvas + 'surface> Painter<'context>
         todo!()
     }
 
-    fn clip(&self, shape: &dyn repaint::base::shapes::Shape) -> Result<(), repaint::painter::methods::ClipError> {
+    fn clip(&self, shape: &impl Shape) -> Result<(), repaint::painter::methods::ClipError> {
         todo!()
     }
 
     fn point(
         &mut self,
-        pos: repaint::base::defs::linalg::Vec2f64,
-        style: repaint::painter::methods::PaintStyle,
+        pos: Vec2f64,
+        style: PaintStyle<Self::NativeColor>,
     ) {
         todo!()
     }
 
     fn pixel(
         &mut self,
-        pos: repaint::base::defs::linalg::Vec2f64,
-        ink: repaint::base::paint::Ink,
+        pos: Vec2f64,
+        ink: Ink<Self::NativeColor>,
     ) {
         todo!()
     }
 
     fn line(
         &mut self,
-        start: repaint::base::defs::linalg::Vec2f64,
-        end: repaint::base::defs::linalg::Vec2f64,
-        pen: &repaint::base::pen::Pen,
+        start: Vec2f64,
+        end: Vec2f64,
+        pen: Pen<Self::NativeColor>,
     ) {
-        todo!()
-    }
-
-    fn make_path(
-        &mut self,
-        path_iter: &mut dyn Iterator<Item = PathCommand>
-    ) -> Result<Self::Path, ()> {
-        let path = create_skia_path(path_iter);
-        Ok(path)
-    }
-
-    fn path(&mut self, path: &Self::Path, style: repaint::painter::methods::PaintStyle) {
-        let paint = paint_style_to_skia_paint(&style);
-        self.canvas.surface.canvas().draw_path(path.as_ref(), &paint);
+        self.canvas.surface.canvas().draw_line(
+            (start.x as f32, start.y as f32),
+            (end.x as f32, end.y as f32),
+            &paint_style_to_skia_paint(&PaintStyle::Stroke(pen))
+        );
     }
 
     fn draw_path_iter<'s, 'a>(
         &'s mut self,
         path_iter: &mut dyn Iterator<Item = PathCommand>,
-        style: repaint::painter::methods::PaintStyle,
+        style: PaintStyle<Self::NativeColor>,
     ) {
         let path = create_skia_path(path_iter);
         let paint = paint_style_to_skia_paint(&style);
@@ -116,22 +102,36 @@ impl<'canvas, 'surface: 'canvas, 'context: 'canvas + 'surface> Painter<'context>
 
     fn clear(
         &mut self,
-        color: repaint::base::paint::Color,
+        color: Self::NativeColor,
     ) {
         self.canvas.surface.canvas().clear(color_to_skia_color(color));
     }
 
     fn clear_with(
         &mut self,
-        paint: &repaint::base::paint::Paint,
+        paint: &Paint<Self::NativeColor>,
     ) {
         todo!()
     }
 }
 
 
+impl<'canvas, 'surface, 'context> WithPathResource<'context> for SkiaPainter<'canvas, 'surface, 'context> {
+    type Path = skia_safe::Path; // TODO ??
 
+    fn make_path(
+        &mut self,
+        path_iter: impl Iterator<Item = PathCommand>
+    ) -> Result<Self::Path, ()> {
+        let path = create_skia_path(path_iter);
+        Ok(path)
+    }
 
+    fn path(&mut self, path: &Self::Path, style: PaintStyle<Self::NativeColor>) {
+        let paint = paint_style_to_skia_paint(&style);
+        self.canvas.surface.canvas().draw_path(path.as_ref(), &paint);
+    }
+}
 
 
 

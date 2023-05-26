@@ -10,7 +10,7 @@ use std::error::Error;
 
 use strum::Display;
 
-use crate::{painter::Painter, base::shapes::Shape};
+use crate::{painter::BasicPainter, base::shapes::Shape};
 
 
 
@@ -18,7 +18,9 @@ use crate::{painter::Painter, base::shapes::Shape};
 /// 
 /// The canvas provides a painter that can be used to draw on it, see the [repaint architecture](crate#architecture) for more details on how this works conceptually.
 pub trait Canvas<'context> { // TODO meybe remove the lifetime and make the canvas to create a pair (context, painter) instead of just painter?
-    type Painter<'canvas>: Painter<'context> where Self: 'canvas;
+    type Shape: Shape;
+
+    type Painter<'canvas>: BasicPainter<'context> where Self: 'canvas;
 
     /// Returns a [`Painter`] that can be used to paint on the canvas.
     /// 
@@ -29,7 +31,7 @@ pub trait Canvas<'context> { // TODO meybe remove the lifetime and make the canv
     fn painter<'s>(&'s mut self) -> Result<Self::Painter<'s>, GetPainterError>;
 
     // TODO
-    fn shape(&self) -> Box<dyn Shape>;
+    fn shape(&self) -> Self::Shape;
 }
 
 #[derive(Debug, Display)]

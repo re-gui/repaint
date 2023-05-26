@@ -1,7 +1,7 @@
 use std::cell::RefCell;
 
 use painter::SkiaContext;
-use repaint::{Canvas, Painter, painter::methods, base::{defs::linalg::Vec2f64, paint::Paint, pen::Pen, blending::BlendMode, shapes::{path::PathCommand, Shape}, transform::Transform2d}};
+use repaint::{Canvas, base::defs::rect::F64Rect, nalgebra::Vector2};
 use skia_safe::Surface;
 
 mod painter;
@@ -27,6 +27,7 @@ impl<'surface, 'context> SkiaCanvas<'surface, 'context> {
 }
 
 impl<'surface, 'context: 'surface> Canvas<'context> for SkiaCanvas<'surface, 'context> {
+    type Shape = F64Rect;
     type Painter<'canvas> = SkiaPainter<'canvas, 'surface, 'context> where Self: 'canvas;
 
     fn painter<'s>(&'s mut self) -> Result<Self::Painter<'s>, repaint::canvas::GetPainterError> {
@@ -37,8 +38,11 @@ impl<'surface, 'context: 'surface> Canvas<'context> for SkiaCanvas<'surface, 'co
         Ok(painter)
     }
 
-    fn shape(&self) -> Box<dyn Shape> {
-        todo!()
+    fn shape(&self) -> Self::Shape {
+        F64Rect::new(
+            Vector2::new(0.0, 0.0),
+            Vector2::new(self.surface.width() as f64, self.surface.height() as f64)
+        )
     }
 
     //fn painter<'s>(&'s mut self) -> Result<Box<dyn repaint::Painter<'context> + 's>, repaint::canvas::GetPainterError> {
@@ -65,7 +69,7 @@ impl<'canvas, 'surface, 'context> SkiaPainter<'canvas, 'surface, 'context> {
 }
 
 mod conversions {
-    use repaint::{base::{defs::colors::default_color_types::RgbaFColor, paint::{Paint, Ink, Color}, blending::BlendMode, pen::{StrokeWidth, PenCap}, shapes::path::PathCommand}, painter::methods::PaintStyle};
+    use repaint::{base::{defs::colors::default_color_types::RgbaFColor, paint::{Paint, Ink}, blending::BlendMode, pen::{StrokeWidth, PenCap}, shapes::path::PathCommand}, painter::methods::PaintStyle};
 
     pub fn color_to_skia_color(color: RgbaFColor) -> skia_safe::Color4f {
         skia_safe::Color4f {
@@ -112,7 +116,7 @@ mod conversions {
         }
     }
 
-    pub fn paint_style_to_skia_paint(style: &PaintStyle) -> skia_safe::Paint {
+    pub fn paint_style_to_skia_paint(style: &PaintStyle<RgbaFColor>) -> skia_safe::Paint {
         use skia_safe::{
             Paint as SkiaPaint,
             paint::Style as SkiaPaintStyle,
@@ -144,7 +148,7 @@ mod conversions {
         sk_paint
     }
 
-    pub fn add_paint_to_skia_paint(sk_paint: &mut skia_safe::Paint, paint: &Paint) {
+    pub fn add_paint_to_skia_paint(sk_paint: &mut skia_safe::Paint, paint: &Paint<RgbaFColor>) {
         match paint.ink {
             Ink::None => {},
             Ink::Color(color) => {
@@ -155,13 +159,13 @@ mod conversions {
             },
         };
 
-        // TODO bleand mode
+        sk_paint.set_blend_mode(blend_mode_to_skia(paint.blend_mode));
 
         sk_paint.set_anti_alias(paint.anti_alias);
     }
 
     // TODO move and remove pub
-    pub fn create_skia_path(path_iter: &mut dyn Iterator<Item = PathCommand>) -> skia_safe::Path {
+    pub fn create_skia_path(path_iter: impl Iterator<Item = PathCommand>) -> skia_safe::Path {
         let mut sk_path = skia_safe::Path::new();
 
         for element in path_iter {

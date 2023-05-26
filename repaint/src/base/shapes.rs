@@ -1,11 +1,13 @@
-use self::polyline::BrokenPolylineCommand;
+use self::{polyline::BrokenPolylineCommand, path::PathCommand};
 
 use super::defs::{rect::F64Rect, linalg::Vec2f64};
 
 pub mod path;
 pub mod polyline;
 
-pub trait Shape {
+pub trait Shape: Clone + std::fmt::Debug + Send + Sync + 'static {
+    type Iter: Iterator<Item = PathCommand>;
+
     /// Returns the exact bounding box of the shape.
     ///
     /// This is the smallest rectangle that contains the shape.
@@ -22,7 +24,9 @@ pub trait Shape {
     ///
     /// # Notes
     ///  * This method could be faster than [`bounding_box`](Shape::bounding_box) in some cases.
-    fn rough_bounding_box(&self) -> F64Rect;
+    fn rough_bounding_box(&self) -> F64Rect {
+        self.bounding_box()
+    }
 
     /// Returns a rough bounding box that contains the shape.
     ///
@@ -32,12 +36,30 @@ pub trait Shape {
     /// # Notes
     ///  * This method could be faster than [`bounding_box`](Shape::bounding_box) in some cases.
     ///  * This method is **not guaranteed** to contain the shape.
-    fn culling_bounding_box(&self) -> F64Rect;
+    fn culling_bounding_box(&self) -> F64Rect {
+        self.bounding_box()
+    }
 
     /// Returns a basic shape that is equivalent to this shape.
-    fn to_basic_shape(&self) -> BasicShape;
+    fn to_basic_shape(&self) -> Option<BasicShape>;
 
-    fn path_commands(&self) -> Box<dyn Iterator<Item = path::PathCommand>>;
+    fn to_path_iter(&self) -> Self::Iter;
+}
+
+impl Shape for F64Rect {
+    type Iter = std::array::IntoIter<PathCommand, 4>;
+
+    fn bounding_box(&self) -> F64Rect {
+        *self
+    }
+
+    fn to_basic_shape(&self) -> Option<BasicShape> {
+        Some(BasicShape::Rect(*self))
+    }
+
+    fn to_path_iter(&self) -> Self::Iter {
+        todo!()
+    }
 }
 
 
@@ -52,6 +74,8 @@ pub enum BasicShape {
 }
 
 impl Shape for BasicShape {
+    type Iter = std::vec::IntoIter<PathCommand>;
+
     fn bounding_box(&self) -> F64Rect {
         match self {
             BasicShape::Rect(rect) => *rect,
@@ -74,11 +98,11 @@ impl Shape for BasicShape {
         unimplemented!()
     }
 
-    fn to_basic_shape(&self) -> BasicShape {
-        self.clone()
+    fn to_basic_shape(&self) -> Option<BasicShape> {
+        Some(self.clone())
     }
 
-    fn path_commands(&self) -> Box<dyn Iterator<Item = path::PathCommand>> {
+    fn to_path_iter(&self) -> Self::Iter {
         todo!()
     }
 }

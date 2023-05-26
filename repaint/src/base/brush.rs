@@ -1,25 +1,12 @@
-use super::paint::Paint;
+use crate::painter::WithPathResource;
 
 
-
-/// A brush used to paint a shape.
-pub struct Brush {
-    /// The paint used to draw the brush.
-    pub paint: Paint,
+pub trait Brush<'context, Painter: WithPathResource<'context> + ?Sized> {
+    fn sweep(
+        &self,
+        painter: &mut Painter,
+        path: &Painter::Path,
+    );
 }
 
-impl Default for Brush {
-    fn default() -> Self {
-        Brush {
-            paint: Paint::default(),
-        }
-    }
-}
-
-impl From<Paint> for Brush {
-    fn from(paint: Paint) -> Self {
-        Brush {
-            paint,
-        }
-    }
-}
+// TODO some basic brushes like solid color, lines, dots, squares, tassellation, ...
