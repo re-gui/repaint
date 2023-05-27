@@ -6,7 +6,7 @@ Provides the [`Painter`] trait.
 
 
 pub mod methods;
-mod text;
+pub mod text;
 
 use std::{str::FromStr};
 
@@ -54,8 +54,10 @@ pub trait BasicPainter<'context> {
     /// efficient/accurate color type to use.
     type NativeColor: ColorType;
 
-    //type Resources: Resources;
+    /// The canvas type associated with this painter.
     type Canvas: Canvas<'context>;
+
+    /// The context type associated with this painter.
     type Context: Context;
 
     /// Get the canvas that this painter is drawing to.
@@ -66,10 +68,7 @@ pub trait BasicPainter<'context> {
     /// some other way to access the canvas by other means.
     fn canvas(&self) -> &Self::Canvas;
 
-    //fn context(&mut self) -> &'context RefCell<Self::Context>;
-
-    /// Returns whether this painter supports antialiasing.
-    fn has_antialias(&self) -> bool;
+    // TODO fn context(&mut self) -> &'context RefCell<Self::Context>;
 
     /// Returns whether this painter can set the given blend mode.
     ///
@@ -123,13 +122,6 @@ pub trait BasicPainter<'context> {
         point_mode: PointMode,
     );
 
-    // TODO maybe move in `RasterPainter` or something similar?
-    fn pixel(
-        &mut self,
-        pos: Vec2f64,
-        ink: Ink<Self::NativeColor>,
-    );
-
     fn line(
         &mut self,
         start: Vec2f64,
@@ -162,6 +154,7 @@ pub trait BasicPainter<'context> {
         rect: F64Rect,
         style: PaintStyle<Self::NativeColor>,
     ) {
+        println!("rect: {:?}", rect);
         self.draw_path_iter(
             &mut rect_to_path(rect).iter().cloned(),
             style,
@@ -169,6 +162,19 @@ pub trait BasicPainter<'context> {
     }
 
     // TODO ...
+}
+
+pub trait RasterPainter<'context>: BasicPainter<'context> {
+    /// Returns whether this painter supports antialiasing.
+    fn has_antialias(&self) -> bool;
+
+    fn pixel(
+        &mut self,
+        pos: Vec2f64,
+        ink: Ink<Self::NativeColor>,
+    );
+
+    // TODO other methods to efficiently draw pixels
 }
 
 pub trait WithPathResource<'context>: BasicPainter<'context> {

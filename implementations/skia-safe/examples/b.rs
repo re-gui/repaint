@@ -1,8 +1,8 @@
 use std::{error::Error, fs::File, io::Write, cell::RefCell};
 
-use repaint::{Canvas, base::{paint::{Paint, Ink}, pen::{Pen, PenCap}, shapes::{path::{PathBuilder, PathCommand}, BasicShape}}, nalgebra::Vector2, Color, methods::PaintStyle, ClipOperation, Painter, FontStyle};
+use repaint::{Canvas, base::{paint::{Paint, Ink}, pen::{Pen, PenCap}, shapes::{path::{PathBuilder, PathCommand}, BasicShape}}, nalgebra::Vector2, Color, methods::PaintStyle, ClipOperation, Painter, FontStyle, Typeface, FontManager};
 use repaint_with_skia_safe::{SkiaCanvas, make_skia_context};
-use skia_safe::{Surface, EncodedImageFormat};
+use skia_safe::{Surface, EncodedImageFormat, Font, TextBlob};
 
 fn draw<'context>(painter: &mut impl Painter<'context, NativeColor = Color>) {
 
@@ -56,12 +56,24 @@ fn draw<'context>(painter: &mut impl Painter<'context, NativeColor = Color>) {
     style.weight = 700.into();
     //style.width = FontWidth::UltraExpanded;
     let face = painter.typeface("Arial", style);
+    println!("names: {:?}: {:?}", face.family_name(), face.enumerate_family_names());
+    //for family in painter.font_manager().families() {
+    //    println!("family: {:?}", family);
+    //}
+    for family in painter.font_manager().families() {
+        // TODO let face = family.typeface(0);
+        println!("family: {:?}", family);
+        let face = painter.typeface(&family, style);
+        face.design_parameters();
+    }
+    println!("parameters: {:?}", face.design_parameters());
     let font = painter.font(&face, 50.0);
     //let font = Font::default();
-    let blob = painter.make_text_blob("ciao", &font);
+    let blob = painter.make_text_blob("cgao", &font);
     let pen: Pen<Color> = Color::RED.into();
-    painter.draw_text_blob(&blob, Vector2::new(50.0, 50.0), Color::BLUE.into());
-    painter.draw_text_blob(&blob, Vector2::new(50.0, 50.0), PaintStyle::Stroke(pen));
+    painter.rect((50.0, 50.0, 50.0, -50.0).into(), Color::BLUE.into());
+    painter.draw_text_blob(&blob, Vector2::new(50.0, 50.0), Color::RED.into());
+    //painter.draw_text_blob(&blob, Vector2::new(50.0, 50.0), PaintStyle::Stroke(pen));
 
     //painter.line(Vector2::new(0.0, 100.0), Vector2::new(100.0, 0.0), pen);
 }
@@ -70,8 +82,10 @@ fn main() -> Result<(), Box<dyn Error>> {
     println!("Hello, world!");
 
     //let font = Font::new(("Arial", "a"), 12.0);
-    //let font = Font::default();
-    //let blob = TextBlob::new("ciao", &font);
+    let typeface: skia_safe::Typeface;
+    //typeface.clone_with_arguments(arguments)
+    let font = Font::default();
+    let blob = TextBlob::new("ciao", &font);
 
     let mut surface = Surface::new_raster_n32_premul((200, 200)).expect("no surface!");
     surface.canvas().clear(skia_safe::Color::WHITE);

@@ -40,8 +40,8 @@ pub use nalgebra;
 pub mod base;
 pub mod utils;
 pub mod canvas;
-//pub mod painter;
-mod painter;
+pub mod painter;
+//mod painter;
 pub mod resource;
 
 pub use canvas::Canvas;
@@ -50,5 +50,6 @@ pub use painter::*;
 
 /// Alias for the [`RgbaFColor`] type.
 ///
-/// This alias is exported since it is the most common color type used for gui and graphics.
+/// This alias is exported since it is the most common color type used for gui and graphics
+/// and might be useful for the user.
 pub type Color = RgbaFColor;

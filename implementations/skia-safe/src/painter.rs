@@ -1,5 +1,6 @@
 
-use repaint::{BasicPainter, base::{shapes::{path::PathCommand, Shape, BasicShape}, defs::{colors::default_color_types::RgbaFColor, linalg::Vec2f64}, paint::{Paint, Ink}, pen::Pen, blending::BlendMode, transform::Transform2d}, nalgebra::Matrix4, SaveLayerRec, methods::{TransformError, ClipError, PaintStyle}, ClipOperation, WithPathResource, Context, WithText, FontStyle, FontWeight, FontWidth, FontSlant, PointMode, Canvas};
+use repaint::{BasicPainter, base::{shapes::{path::PathCommand, Shape, BasicShape}, defs::{colors::default_color_types::RgbaFColor, linalg::Vec2f64}, paint::{Paint, Ink}, pen::Pen, blending::BlendMode, transform::Transform2d}, nalgebra::Matrix4, SaveLayerRec, methods::{TransformError, ClipError, PaintStyle}, ClipOperation, WithPathResource, Context, WithText, FontStyle, FontWeight, FontWidth, FontSlant, PointMode, Canvas, RasterPainter, LocalizedString, FontVariationParameter, FontVariationAxisTag, FontVariationAxis};
+use skia_safe::{font_arguments::VariationPosition, FourByteTag};
 
 use crate::{SkiaCanvas, conversions::{create_skia_path, paint_style_to_skia_paint, color_to_skia_color}, IntoSkiaCorrespondingType};
 
@@ -40,6 +41,7 @@ impl Buffers {
 pub struct SkiaPainter<'canvas, 'surface, 'context> {
     canvas: &'canvas mut SkiaCanvas<'surface, 'context>,
     buffers: Buffers,
+    font_namager: FontManager,
 }
 
 impl<'canvas, 'surface, 'context> SkiaPainter<'canvas, 'surface, 'context> {
@@ -47,6 +49,7 @@ impl<'canvas, 'surface, 'context> SkiaPainter<'canvas, 'surface, 'context> {
         Self {
             canvas,
             buffers: Buffers::new(),
+            font_namager: FontManager(skia_safe::FontMgr::new()), // TODO remove and move in the context
         }
     }
 
@@ -67,10 +70,6 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
 
     fn canvas(&self) -> &Self::Canvas {
         self.canvas
-    }
-
-    fn has_antialias(&self) -> bool {
-        true
     }
 
     fn is_blend_mode_valid(&self, _mode: BlendMode) -> bool {
@@ -215,14 +214,6 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
         self.buffers.points.clear();
     }
 
-    fn pixel(
-        &mut self,
-        pos: Vec2f64,
-        ink: Ink<Self::NativeColor>,
-    ) {
-        self.point(pos, PaintStyle::Fill(ink.into()));
-    }
-
     fn line(
         &mut self,
         start: Vec2f64,
@@ -266,6 +257,19 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
     }
 }
 
+impl<'canvas, 'surface, 'context> RasterPainter<'context> for SkiaPainter<'canvas, 'surface, 'context> {
+    fn has_antialias(&self) -> bool {
+        true
+    }
+
+    fn pixel(
+        &mut self,
+        pos: Vec2f64,
+        ink: Ink<Self::NativeColor>,
+    ) {
+        self.point(pos, PaintStyle::Fill(ink.into()));
+    }
+}
 
 impl<'canvas, 'surface, 'context> WithPathResource<'context> for SkiaPainter<'canvas, 'surface, 'context> {
     type Path = skia_safe::Path; // TODO ??
@@ -286,7 +290,73 @@ impl<'canvas, 'surface, 'context> WithPathResource<'context> for SkiaPainter<'ca
 
 pub struct Typeface(skia_safe::Typeface);
 
-impl repaint::Typeface for Typeface {}
+impl repaint::Typeface for Typeface {
+    fn style(&self) -> FontStyle {
+        let sk_style = self.0.font_style();
+        FontStyle {
+            weight: from_skia_weight(sk_style.weight()),
+            width: from_skia_width(sk_style.width()),
+            slant: from_skia_slant(sk_style.slant()),
+        }
+    }
+
+    fn is_fixed_pitch(&self) -> bool {
+        self.0.is_fixed_pitch()
+    }
+
+    fn design_parameters(&self) -> Vec<FontVariationParameter> {
+        let axes = self.0.variation_design_parameters();
+        let coords = self.0.variation_design_position();
+        println!("axes: {:?}, coords: {:?}", axes, coords);
+        debug_assert_eq!(axes.is_some(), coords.is_some());
+        if axes.is_none() || coords.is_none() {
+            return vec![];
+        }
+        let parameters = axes.unwrap();
+        let coords = coords.unwrap();
+        debug_assert_eq!(parameters.len(), coords.len());
+        parameters.iter().zip(coords.iter()).map(|(axis, coord)| {
+            assert_eq!(coord.axis, axis.tag);
+            FontVariationParameter {
+                axis: FontVariationAxis {
+                    tag: FontVariationAxisTag::from_bytes([axis.tag.a(), axis.tag.b(), axis.tag.c(), axis.tag.d()]),
+                    range: axis.min..=axis.max,
+                    default: axis.def,
+                },
+                value: coord.value,
+            }
+        }).collect()
+    }
+
+    fn with_parameters(self, parameters: &[FontVariationParameter]) -> Option<Self> {
+        let coords: Vec<skia_safe::font_arguments::variation_position::Coordinate> = parameters
+            .iter()
+            .map(|p| skia_safe::font_arguments::variation_position::Coordinate {
+                    axis: FourByteTag::from_chars(
+                        p.axis.tag.tag()[0] as char,
+                        p.axis.tag.tag()[1] as char,
+                        p.axis.tag.tag()[2] as char,
+                        p.axis.tag.tag()[3] as char
+                    ),
+                    value: p.value,
+            })
+            .collect();
+        let args = skia_safe::FontArguments::new()
+            .set_variation_design_position(VariationPosition {
+                coordinates: &coords,
+            });
+        // TODO args.set_palette(palette) ????
+        Some(Typeface(self.0.clone_with_arguments(&args)?))
+    }
+
+    fn family_name(&self) -> String {
+        self.0.family_name()
+    }
+
+    fn enumerate_family_names(&self) -> Vec<LocalizedString> {
+        self.0.new_family_name_iterator().map(|name| LocalizedString { string: name.string, language: name.language }).collect()
+    }
+}
 
 pub struct Font(skia_safe::Font);
 
@@ -305,10 +375,24 @@ pub struct TextBlob(skia_safe::TextBlob);
 impl repaint::TextBlob for TextBlob {
 }
 
+pub struct FontManager(skia_safe::FontMgr);
+
+impl repaint::FontManager for FontManager {
+    type Iter = std::vec::IntoIter<String>; // TODO inefficient
+    fn families(&self) -> Self::Iter {
+        self.0.family_names().collect::<Vec<_>>().into_iter()
+    }
+}
+
 impl<'canvas, 'surface, 'context> WithText<'context> for SkiaPainter<'canvas, 'surface, 'context> {
     type Typeface = Typeface;
     type Font = Font;
     type TextBlob = TextBlob;
+    type FontManager = FontManager;
+
+    fn font_manager(&self) -> &Self::FontManager {
+        &self.font_namager
+    }
 
     fn typeface(&mut self, family_name: &str, style: FontStyle) -> Self::Typeface {
         let sk_style = skia_safe::FontStyle::new(
@@ -317,6 +401,10 @@ impl<'canvas, 'surface, 'context> WithText<'context> for SkiaPainter<'canvas, 's
             to_skia_slant(style.slant),
         );
         let typeface = skia_safe::Typeface::from_name(family_name, sk_style).unwrap();
+        //let in_file = std::fs::read("RoboFlex.ttf").unwrap();
+        //println!("in_file: {:?}", in_file.len());
+        //let data = unsafe {skia_safe::Data::new_bytes(&in_file) };
+        //skia_safe::Typeface::from_data(data, 0).unwrap();
         Typeface(typeface)
     }
 
@@ -353,6 +441,23 @@ fn to_skia_weight(weight: FontWeight) -> skia_safe::font_style::Weight {
     }
 }
 
+fn from_skia_weight(weight: skia_safe::font_style::Weight) -> FontWeight {
+    match weight {
+        skia_safe::font_style::Weight::INVISIBLE => FontWeight::Invisible,
+        skia_safe::font_style::Weight::THIN => FontWeight::Thin,
+        skia_safe::font_style::Weight::EXTRA_LIGHT => FontWeight::ExtraLight,
+        skia_safe::font_style::Weight::LIGHT => FontWeight::Light,
+        skia_safe::font_style::Weight::NORMAL => FontWeight::Normal,
+        skia_safe::font_style::Weight::MEDIUM => FontWeight::Medium,
+        skia_safe::font_style::Weight::SEMI_BOLD => FontWeight::SemiBold,
+        skia_safe::font_style::Weight::BOLD => FontWeight::Bold,
+        skia_safe::font_style::Weight::EXTRA_BOLD => FontWeight::ExtraBold,
+        skia_safe::font_style::Weight::BLACK => FontWeight::Black,
+        skia_safe::font_style::Weight::EXTRA_BLACK => FontWeight::ExtraBlack,
+        _ => FontWeight::from_number(*weight)
+    }
+}
+
 fn to_skia_width(width: FontWidth) -> skia_safe::font_style::Width {
     match width {
         FontWidth::UltraCondensed => skia_safe::font_style::Width::ULTRA_CONDENSED,
@@ -368,10 +473,33 @@ fn to_skia_width(width: FontWidth) -> skia_safe::font_style::Width {
     }
 }
 
+fn from_skia_width(width: skia_safe::font_style::Width) -> FontWidth {
+    match width {
+        skia_safe::font_style::Width::ULTRA_CONDENSED => FontWidth::UltraCondensed,
+        skia_safe::font_style::Width::EXTRA_CONDENSED => FontWidth::ExtraCondensed,
+        skia_safe::font_style::Width::CONDENSED => FontWidth::Condensed,
+        skia_safe::font_style::Width::SEMI_CONDENSED => FontWidth::SemiCondensed,
+        skia_safe::font_style::Width::NORMAL => FontWidth::Normal,
+        skia_safe::font_style::Width::SEMI_EXPANDED => FontWidth::SemiExpanded,
+        skia_safe::font_style::Width::EXPANDED => FontWidth::Expanded,
+        skia_safe::font_style::Width::EXTRA_EXPANDED => FontWidth::ExtraExpanded,
+        skia_safe::font_style::Width::ULTRA_EXPANDED => FontWidth::UltraExpanded,
+        _ => FontWidth::Custom(*width),
+    }
+}
+
 fn to_skia_slant(slant: FontSlant) -> skia_safe::font_style::Slant {
     match slant {
         FontSlant::Upright => skia_safe::font_style::Slant::Upright,
         FontSlant::Italic => skia_safe::font_style::Slant::Italic,
         FontSlant::Oblique => skia_safe::font_style::Slant::Oblique,
+    }
+}
+
+fn from_skia_slant(slant: skia_safe::font_style::Slant) -> FontSlant {
+    match slant {
+        skia_safe::font_style::Slant::Upright => FontSlant::Upright,
+        skia_safe::font_style::Slant::Italic => FontSlant::Italic,
+        skia_safe::font_style::Slant::Oblique => FontSlant::Oblique,
     }
 }

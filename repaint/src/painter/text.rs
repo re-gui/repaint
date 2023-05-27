@@ -1,5 +1,11 @@
 
+use std::cmp::Ordering;
+
 use super::*;
+
+mod variation;
+
+pub use variation::*;
 
 /// The **weight** of a font.
 ///
@@ -72,6 +78,18 @@ pub enum FontWeight {
     Custom(i32),
 }
 
+impl PartialOrd for FontWeight {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.to_number().cmp(&other.to_number()))
+    }
+}
+
+impl Ord for FontWeight {
+    fn cmp(&self, other: &Self) -> Ordering {
+        self.to_number().cmp(&other.to_number())
+    }
+}
+
 /// The default font weight is [`Normal`](FontWeight::Normal).
 impl Default for FontWeight {
     fn default() -> Self {
@@ -105,12 +123,12 @@ impl FontWeight {
     /// If the weight is [`Custom(weight)`], it is converted to the corresponding
     /// common value if possible.
     pub fn fix(self) -> Self {
-        Self::from_number(Self::to_number(self))
+        Self::from_number(self.to_number())
     }
 
     /// Returns the number corresponding to the [`FontWeight`].
-    pub fn to_number(weight: FontWeight) -> i32 {
-        match weight {
+    pub fn to_number(&self) -> i32 {
+        match self {
             FontWeight::Invisible => 0,
             FontWeight::Thin => 100,
             FontWeight::ExtraLight => 200,
@@ -122,8 +140,12 @@ impl FontWeight {
             FontWeight::ExtraBold => 800,
             FontWeight::Black => 900,
             FontWeight::ExtraBlack => 1000,
-            FontWeight::Custom(weight) => weight,
+            FontWeight::Custom(weight) => *weight,
         }
+    }
+
+    pub fn is_bold(&self) -> bool {
+        self > &FontWeight::Normal
     }
 }
 
@@ -242,13 +264,19 @@ impl Default for FontWidth {
 ///
 /// The font slant is also known as the font slope and describes the angle of the glyphs in the
 /// font. It is mainly used in [`FontStyle`].
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, EnumIter, PartialOrd, Ord)]
 pub enum FontSlant {
     Upright,
     Italic,
     Oblique,
 }
 // TODO conversions to/from number and string
+
+impl FontSlant {
+    pub fn is_italic(&self) -> bool {
+        self > &FontSlant::Upright
+    }
+}
 
 /// The default font slant is [`Upright`](FontSlant::Upright).
 impl Default for FontSlant {
@@ -280,14 +308,41 @@ impl Default for FontStyle {
     }
 }
 
+// TODO move elsewhere
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub struct LocalizedString { // TODO or font name?
+    pub string: String,
+    pub language: String,
+}
+
+pub trait FontManager {
+    type Iter: Iterator<Item = String>;
+
+    fn families(&self) -> Self::Iter;
+}
+
 // https://api.skia.org/classSkTypeface.html#a1cd98b2bdf57d80e06917c24c5526b59
-pub trait Typeface {
+pub trait Typeface: Sized {
     //type GlyphId; // TODO a trait for glyph id such as hashable, copy, etc.
 
     //fn style(&self) -> FontStyle;
     //fn is_fixed_pitch(&self) -> bool;
     //fn glyph_id(&self, c: char) -> Self::GlyphId;
     // TODO ...
+
+    fn style(&self) -> FontStyle;
+
+    /// Returns `true` if the typeface **claims** to be fixed pitch.
+    fn is_fixed_pitch(&self) -> bool;
+
+    // https://developer.mozilla.org/en-US/docs/Web/CSS/CSS_fonts/Variable_fonts_guide
+    fn design_parameters(&self) -> Vec<FontVariationParameter>; // TODO avoid vec, use iterator or cow or something similar
+
+    fn with_parameters(self, parameters: &[FontVariationParameter]) -> Option<Self>; // TODO error type
+
+    fn family_name(&self) -> String; // TODO replace with Cow, Cow<'static, str>, str or something similar to avoid allocation
+
+    fn enumerate_family_names(&self) -> Vec<LocalizedString>;
 }
 
 pub trait Glyph {
@@ -311,7 +366,9 @@ pub trait WithText<'context>: BasicPainter<'context> {
     type Typeface: Typeface;
     type Font: Font<Typeface = Self::Typeface>;
     type TextBlob: TextBlob;
+    type FontManager: FontManager;
 
+    fn font_manager(&self) -> &Self::FontManager;
 
     fn typeface(&mut self, family_name: &str, style: FontStyle) -> Self::Typeface;
     // TODO a method to load from file with `read: impl Read` parameter

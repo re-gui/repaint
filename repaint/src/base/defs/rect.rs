@@ -29,16 +29,16 @@ where
     /// Creates a new rectangle from a min and max point.
     /// The min and max points are inverted if necessary.
     pub fn new_checked(min: Vector2<T>, max: Vector2<T>) -> Rect<T> {
-        let min = Vector2::<T>::new(
-            *tmp_partial_min(&min.x, &max.x),
-            *tmp_partial_min(&min.y, &max.y),
-        );
-        let max = Vector2::<T>::new(
-            *tmp_partial_max(&min.x, &max.x),
-            *tmp_partial_max(&min.y, &max.y),
-        );
-
-        return Rect { min, max };
+        return Rect {
+            min: Vector2::<T>::new(
+                *tmp_partial_min(&min.x, &max.x),
+                *tmp_partial_min(&min.y, &max.y),
+            ),
+            max: Vector2::<T>::new(
+                *tmp_partial_max(&min.x, &max.x),
+                *tmp_partial_max(&min.y, &max.y),
+            )
+        };
     }
 
     /// Creates a new rectangle from a position and size.
@@ -55,6 +55,16 @@ where
     /// If the size is negative, the rectangle is inverted.
     pub fn from_pos_and_size_coords(x: T, y: T, width: T, height: T) -> Rect<T> {
         Self::from_pos_and_size(Vector2::new(x, y), Vector2::new(width, height))
+    }
+
+    pub fn fix(mut self) -> Self {
+        if self.min.x > self.max.x {
+            std::mem::swap(&mut self.min.x, &mut self.max.x);
+        }
+        if self.min.y > self.max.y {
+            std::mem::swap(&mut self.min.y, &mut self.max.y);
+        }
+        self
     }
 
     /// Get the width of the rectangle.
