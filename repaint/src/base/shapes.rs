@@ -68,8 +68,8 @@ pub enum BasicShape {
     Rect(F64Rect),
     Path(Vec<path::PathCommand>),
     Polyline(Vec<BrokenPolylineCommand>),
-    Circle{ center: Vec2f64, radius: f32 },
-    // TODO ellipse,
+    Circle{ center: Vec2f64, radius: f64 },
+    // TODO ellipse, rounded rect, ...
     // TODO ...
 }
 
@@ -103,6 +103,31 @@ impl Shape for BasicShape {
     }
 
     fn to_path_iter(&self) -> Self::Iter {
-        todo!()
+        match self {
+            BasicShape::Rect(rect) => {
+                let mut path = Vec::with_capacity(4);
+                path.push(PathCommand::MoveTo(rect.min));
+                path.push(PathCommand::LineTo(Vec2f64::new(rect.max.x, rect.min.y)));
+                path.push(PathCommand::LineTo(rect.max));
+                path.push(PathCommand::LineTo(Vec2f64::new(rect.min.x, rect.max.y)));
+                path.push(PathCommand::ClosePath);
+                path.into_iter()
+            }
+            BasicShape::Path(path) => path.clone().into_iter(),
+            BasicShape::Polyline(_polyline) => todo!(), // TODO
+            BasicShape::Circle{ center, radius } => {
+                let path = vec![
+                    PathCommand::MoveTo(Vec2f64::new(center.x - radius, center.y)),
+                    PathCommand::EllipticalArcTo {
+                        radii: Vec2f64::new(*radius, *radius),
+                        x_axis_rotation: 0.0,
+                        large_arc_flag: false,
+                        sweep_flag: true,
+                        end_pt: Vec2f64::new(center.x + radius, center.y),
+                    },
+                ];
+                path.into_iter()
+            }
+        }
     }
 }

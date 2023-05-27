@@ -40,11 +40,13 @@ pub use nalgebra;
 pub mod base;
 pub mod utils;
 pub mod canvas;
-pub mod painter;
+//pub mod painter;
+mod painter;
 pub mod resource;
 
 pub use canvas::Canvas;
-pub use painter::BasicPainter;
+//pub use painter::BasicPainter;
+pub use painter::*;
 
 /// Alias for the [`RgbaFColor`] type.
 ///

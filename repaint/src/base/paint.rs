@@ -18,7 +18,7 @@ impl<Color> Default for Paint<Color> {
         Paint {
             ink: Ink::None,
             blend_mode: BlendMode::default(),
-            anti_alias: false,
+            anti_alias: true,
         }
     }
 }

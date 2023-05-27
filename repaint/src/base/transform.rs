@@ -1,10 +1,16 @@
 
 use crate::base::defs::linalg::*;
 
+use nalgebra::{Matrix4, Rotation2};
+
 //#[derive(Clone, Copy)]
 pub enum Transform2d {
     /// The identity transform
     Identity,
+
+    Translate(Vec2f64),
+
+    Rotate(f64),
 
     /// The Transform is a pure homogeneous scale
     Scale(f64),
@@ -16,7 +22,7 @@ pub enum Transform2d {
     },
 
     /// The transform is non-homogeneous scale
-    NonHomogeneousScale(Mat2f64),
+    Mat2(Mat2f64),
 
     /// The transform is an affine transform
     Affine {
@@ -36,12 +42,14 @@ impl Transform2d {
     pub fn eval(&self, point: Vec2f64) -> Vec2f64 {
         match self {
             Transform2d::Identity => point,
+            Transform2d::Translate(translation) => point + *translation,
+            Transform2d::Rotate(angle) => Rotation2::new(*angle).matrix() * point,
             Transform2d::Scale(scale) => point * *scale,
             Transform2d::XYScale {
                 x_factor,
                 y_factor,
             } => Vec2f64::new(point.x * *x_factor, point.y * *y_factor),
-            Transform2d::NonHomogeneousScale(linear) => linear * point,
+            Transform2d::Mat2(linear) => linear * point,
             Transform2d::Affine {
                 linear,
                 translation,
@@ -55,9 +63,11 @@ impl Transform2d {
     pub fn is_line_preserving(&self) -> bool {
         match self {
             Transform2d::Identity => true,
+            Transform2d::Translate(_) => true,
+            Transform2d::Rotate(_) => false,
             Transform2d::Scale(_) => true,
             Transform2d::XYScale { .. } => true,
-            Transform2d::NonHomogeneousScale(_) => true,
+            Transform2d::Mat2(_) => true,
             Transform2d::Affine { .. } => true,
             Transform2d::GeneralLinesPreserving(_) => true,
             Transform2d::General(_) => false,
@@ -72,6 +82,14 @@ impl Transform2d {
                 Mat2f64::identity(),
                 Vec2f64::zeros()
             )),
+            Transform2d::Translate(translation) => Some((
+                Mat2f64::identity(),
+                *translation
+            )),
+            Transform2d::Rotate(angle) => Some((
+                *Rotation2::new(*angle).matrix(),
+                Vec2f64::zeros()
+            )),
             Transform2d::Scale(scale) => Some((
                 scaling_matrix2(*scale, *scale),
                 Vec2f64::zeros()
@@ -84,7 +102,7 @@ impl Transform2d {
                 scaling_matrix2(*x_factor, *y_factor),
                 Vec2f64::zeros(),
             )),
-            Transform2d::NonHomogeneousScale(linear) => Some((
+            Transform2d::Mat2(linear) => Some((
                 *linear,
                 Vec2f64::zeros()
             )),
@@ -100,9 +118,24 @@ impl Transform2d {
         }
     }
 
+    pub fn to_mat4x4(&self) -> Option<Matrix4<f64>> {
+        if let Some((linear, translation)) = self.to_affine() {
+            Some(Matrix4::new(
+                linear[(0, 0)], linear[(0, 1)], 0.0, translation.x,
+                linear[(1, 0)], linear[(1, 1)], 0.0, translation.y,
+                0.0, 0.0, 1.0, 0.0,
+                0.0, 0.0, 0.0, 1.0
+            ))
+        } else {
+            None
+        }
+    }
+
     pub fn inverse(&self) -> Option<Transform2d> {
         unimplemented!()
     }
+
+    // TODO composition
 }
 
 fn scaling_matrix2(x_scale: f64, y_scale: f64) -> Mat2f64 {

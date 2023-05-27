@@ -1,6 +1,6 @@
 use std::cell::RefCell;
 
-use painter::SkiaContext;
+use painter::{SkiaContext, SkiaPainter};
 use repaint::{Canvas, base::defs::rect::F64Rect, nalgebra::Vector2};
 use skia_safe::Surface;
 
@@ -14,14 +14,14 @@ pub fn make_skia_context() -> SkiaContext {
 pub struct SkiaCanvas<'surface, 'context: 'surface>
 {
     surface: &'surface mut Surface,
-    context: &'context RefCell<SkiaContext>,
+    _context: &'context RefCell<SkiaContext>,
 }
 
 impl<'surface, 'context> SkiaCanvas<'surface, 'context> {
     pub fn new(surface: &'surface mut Surface, context: &'context RefCell<SkiaContext>) -> Self {
         Self {
             surface,
-            context,
+            _context: context,
         }
     }
 }
@@ -31,11 +31,7 @@ impl<'surface, 'context: 'surface> Canvas<'context> for SkiaCanvas<'surface, 'co
     type Painter<'canvas> = SkiaPainter<'canvas, 'surface, 'context> where Self: 'canvas;
 
     fn painter<'s>(&'s mut self) -> Result<Self::Painter<'s>, repaint::canvas::GetPainterError> {
-        let painter = SkiaPainter {
-            canvas: self,
-        };
-
-        Ok(painter)
+        Ok(SkiaPainter::new(self))
     }
 
     fn shape(&self) -> Self::Shape {
@@ -57,19 +53,8 @@ impl<'surface, 'context: 'surface> Canvas<'context> for SkiaCanvas<'surface, 'co
     //}
 }
 
-pub struct SkiaPainter<'canvas, 'surface, 'context> {
-    canvas: &'canvas mut SkiaCanvas<'surface, 'context>,
-}
-
-impl<'canvas, 'surface, 'context> SkiaPainter<'canvas, 'surface, 'context> {
-    //fn canvas<'s>(&'s self) -> &'canvas SkiaCanvas<'surface, 'context> {
-    fn canvas<'s>(&'s self) -> &'canvas SkiaCanvas {
-        self.canvas
-    }
-}
-
 mod conversions {
-    use repaint::{base::{defs::colors::default_color_types::RgbaFColor, paint::{Paint, Ink}, blending::BlendMode, pen::{StrokeWidth, PenCap}, shapes::path::PathCommand}, painter::methods::PaintStyle};
+    use repaint::{base::{defs::colors::default_color_types::RgbaFColor, paint::{Paint, Ink}, blending::BlendMode, pen::{StrokeWidth, PenCap}, shapes::path::PathCommand}, methods::PaintStyle};
 
     pub fn color_to_skia_color(color: RgbaFColor) -> skia_safe::Color4f {
         skia_safe::Color4f {
@@ -197,14 +182,8 @@ mod conversions {
                     (control_pt_2_offset.x as f32, control_pt_2_offset.y as f32),
                     (end_pt_offset.x as f32, end_pt_offset.y as f32),
                 ),
-                PathCommand::SmoothCubicBezierCurveTo {
-                    control_pt_2,
-                    end_pt
-                } => todo!("SmoothCubicBezierCurveTo"),
-                PathCommand::SmoothCubicBezierCurveToOffset {
-                    control_pt_2_offset,
-                    end_pt_offset
-                } => todo!("SmoothCubicBezierCurveToOffset"),
+                PathCommand::SmoothCubicBezierCurveTo { .. } => todo!("SmoothCubicBezierCurveTo"),
+                PathCommand::SmoothCubicBezierCurveToOffset { .. } => todo!("SmoothCubicBezierCurveToOffset"),
                 PathCommand::QuadraticBezierCurveTo {
                     control_pt,
                     end_pt
@@ -219,22 +198,10 @@ mod conversions {
                     (control_pt_offset.x as f32, control_pt_offset.y as f32),
                     (end_pt_offset.x as f32, end_pt_offset.y as f32),
                 ),
-                PathCommand::SmoothQuadraticBezierCurveTo(end_pt) => todo!("SmoothQuadraticBezierCurveTo"),
-                PathCommand::SmoothQuadraticBezierCurveToOffset(end_pt_offset) => todo!("SmoothQuadraticBezierCurveToOffset"),
-                PathCommand::EllipticalArcTo {
-                    radii,
-                    x_axis_rotation,
-                    large_arc_flag,
-                    sweep_flag,
-                    end_pt
-                } => todo!("EllipticalArcTo"),
-                PathCommand::EllipticalArcToOffset {
-                    radii,
-                    x_axis_rotation,
-                    large_arc_flag,
-                    sweep_flag,
-                    end_pt_offset
-                } => todo!("EllipticalArcToOffset"),
+                PathCommand::SmoothQuadraticBezierCurveTo(_) => todo!("SmoothQuadraticBezierCurveTo"),
+                PathCommand::SmoothQuadraticBezierCurveToOffset(_) => todo!("SmoothQuadraticBezierCurveToOffset"),
+                PathCommand::EllipticalArcTo { .. } => todo!("EllipticalArcTo"),
+                PathCommand::EllipticalArcToOffset { .. } => todo!("EllipticalArcToOffset"),
             }; // TODO following skia, *Offset -> Relative* or something like that
             // TODO add functions to convert from relative to absolute given the current position,
             // also handle the smooth case
@@ -245,5 +212,24 @@ mod conversions {
     }
 }
 
+
+pub trait IntoSkiaCorrespondingType {
+    type SkiaType;
+
+    fn into_skia(self) -> Self::SkiaType;
+}
+
+impl IntoSkiaCorrespondingType for F64Rect {
+    type SkiaType = skia_safe::Rect;
+
+    fn into_skia(self) -> Self::SkiaType {
+        skia_safe::Rect::new(
+            self.min.x as f32,
+            self.min.y as f32,
+            self.max.x as f32,
+            self.max.y as f32,
+        )
+    }
+}
 
 // TODO remove Vec2f64 alias from repaint lib to be more explicit

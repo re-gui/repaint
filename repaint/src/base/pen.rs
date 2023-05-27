@@ -1,45 +1,61 @@
-use super::{paint::Paint, defs::colors::ColorType};
+use super::paint::Paint;
 
 
+/// A pen defines how a stroke is drawn.
 #[derive(Clone, Debug, PartialEq)]
 pub struct Pen<Color> {
-    // The paint used to draw the stroke
+    /// The paint used to draw the stroke
     pub paint: Paint<Color>,
 
-    // The path effect to apply to the stroke
+    /// The path effect to apply to the stroke
     pub path_effect: PathEffect,
 
-    // The stroke width
+    /// The stroke width
     pub stroke_width: StrokeWidth,
 
-    /// A cosmetic stroke is a stroke that as some properties that are not affected by the transformation:
-    ///  - the [width](`Pen::stroke_width`)
-    ///  - the dash pattern
-    pub cosmetic_stroke: bool,
-
+    /// The cap to use for the stroke
     pub cap: PenCap,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+/// Allows to concisely create a pen from a color.
+///
+/// The paint will be a solid color paint, the other fields will be set to their default value.
+///
+/// # Example
+/// ```
+/// use repaint::Color;
+/// use repaint::base::Pen;
+///
+/// let pen: Pen<Color> = Color::RED.into();
+/// ```
+impl<Color> From<Color> for Pen<Color> {
+    fn from(color: Color) -> Self {
+        Pen {
+            paint: color.into(),
+            ..Pen::default()
+        }
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum PenCap {
     Butt,
     Round,
     Square,
 }
 
-impl<Color: ColorType> Default for Pen<Color> {
+impl<Color> Default for Pen<Color> {
     fn default() -> Self {
         Pen {
             paint: Paint::default(),
             path_effect: PathEffect::None,
             stroke_width: StrokeWidth::Hairline,
-            cosmetic_stroke: false,
             cap: PenCap::Butt,
         }
     }
 }
 
-impl<Color: ColorType> From<Paint<Color>> for Pen<Color> {
+impl<Color> From<Paint<Color>> for Pen<Color> {
     fn from(paint: Paint<Color>) -> Self {
         Pen {
             paint,

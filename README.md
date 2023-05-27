@@ -32,9 +32,7 @@ Legend:
 - :star: : the reference implementation
 - :x: : not started
 - :construction: : in progress
-- in progress: :construction:
-- done: :white_check_mark:
-- not started: :x:
+- :white_check_mark: : done
 
 > :information_source: the [`repaint-with-skia-safe`](./implementations/skia-safe/) currently has the priority, the `repaint` will be adapted to it and [`repaint-with-skia-safe`](./implementations/skia-safe/) can be considered as the reference implementation: refer to it when in doubt.
 

@@ -25,4 +25,10 @@ impl<Color: ColorType> PaintStyle<Color> {
     }
 }
 
+impl<Color> From<Color> for PaintStyle<Color> {
+    fn from(color: Color) -> Self {
+        PaintStyle::Fill(color.into())
+    }
+}
+
 // TODO instead of f32 or f64 for points, we could make an enum to discriminate between integer and floating point coordinates...
