@@ -1,18 +1,13 @@
 # repaint
  A basic painting library
 
-An all-rust alternative to skia.
-
-:warning: this is a work in progress, and is not yet ready for use.
+:warning: this is a work in progress, and is not yet ready for use. It is being developed primarily for the [regui](https://github.com/re-gui/regui) crate.
 
 ## Provided implementations
 
 In order of priority:
 
 where:
-- "on ...": the implementation is a wrapper around the given crate, 
-- "with ...": the implementation is custom but based on the given crate under the hood.
-- no prefix: the implementation is custom or not specified, yet
 
 | Implementation | Status | Notes |
 | --- | --- | --- |
@@ -34,6 +29,6 @@ Legend:
 - :construction: : in progress
 - :white_check_mark: : done
 
-> :information_source: the [`repaint-with-skia-safe`](./implementations/skia-safe/) currently has the priority, the `repaint` will be adapted to it and [`repaint-with-skia-safe`](./implementations/skia-safe/) can be considered as the reference implementation: refer to it when in doubt.
+> :information_source: the [`repaint-with-skia-safe`](./implementations/skia-safe/) (currently) has the priority, `repaint` will be adapted to it and [`repaint-with-skia-safe`](./implementations/skia-safe/) can be considered as the reference implementation: refer to it when in doubt.
 
 TODO serde
