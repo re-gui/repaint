@@ -1,5 +1,5 @@
 # repaint
- A basic painting library
+ A basic 2d painting library.
 
 :warning: this is a work in progress, and is not yet ready for use. It is being developed primarily for the [regui](https://github.com/re-gui/regui) crate.
 
