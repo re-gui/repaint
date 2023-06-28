@@ -1,10 +1,10 @@
 use std::{error::Error, fs::File, io::Write, cell::RefCell};
 
 use repaint::{Canvas, base::{paint::{Paint, Ink}, pen::{Pen, PenCap}, shapes::{path::{PathBuilder, PathCommand}, BasicShape}}, nalgebra::Vector2, Color, methods::PaintStyle, ClipOperation, Painter, FontStyle, Typeface, FontManager};
-use repaint_with_skia_safe::{SkiaCanvas, make_skia_context};
+use repaint_with_skia_safe::{SkiaCanvas};
 use skia_safe::{Surface, EncodedImageFormat, Font, TextBlob};
 
-fn draw<'context>(painter: &mut impl Painter<'context, NativeColor = Color>) {
+fn draw(painter: &mut impl Painter<NativeColor = Color>) {
 
     painter.clear(Color::WHITE);
 
@@ -91,9 +91,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     surface.canvas().clear(skia_safe::Color::WHITE);
 
     {
-        let ctx = RefCell::new(make_skia_context());
-
-        let mut canvas = SkiaCanvas::new(&mut surface, &ctx);
+        let w = surface.width() as f64;
+        let h = surface.height() as f64;
+        let mut canvas = SkiaCanvas::new(surface.canvas(), w, h);
         let mut painter = canvas.painter().unwrap();
 
         let start = std::time::Instant::now();

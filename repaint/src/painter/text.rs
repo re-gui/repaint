@@ -362,7 +362,7 @@ pub trait TextBlob {
     // TODO ...
 }
 
-pub trait WithText<'context>: BasicPainter<'context> {
+pub trait WithText: BasicPainter {
     type Typeface: Typeface;
     type Font: Font<Typeface = Self::Typeface>;
     type TextBlob: TextBlob;

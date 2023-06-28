@@ -6,26 +6,142 @@ use nalgebra as na;
 pub type F32Rect = Rect<f32>;
 pub type F64Rect = Rect<f64>;
 
+pub struct TlTrBlBr<T>
+{
+    pub top_left: T,
+    pub top_right: T,
+    pub bottom_left: T,
+    pub bottom_right: T,
+}
+
+impl<T> TlTrBlBr<T> {
+    pub fn new(top_left: T, top_right: T, bottom_left: T, bottom_right: T) -> Self {
+        Self {
+            top_left,
+            top_right,
+            bottom_left,
+            bottom_right,
+        }
+    }
+
+    pub fn new_same(value: T) -> Self
+    where
+        T: Clone,
+    {
+        Self {
+            top_left: value.clone(),
+            top_right: value.clone(),
+            bottom_left: value.clone(),
+            bottom_right: value,
+        }
+    }
+
+    pub fn new_lr(left: T, right: T) -> Self
+    where
+        T: Clone,
+    {
+        Self {
+            top_left: left.clone(),
+            top_right: right.clone(),
+            bottom_left: left,
+            bottom_right: right,
+        }
+    }
+
+    pub fn new_tb(top: T, bottom: T) -> Self
+    where
+        T: Clone,
+    {
+        Self {
+            top_left: top.clone(),
+            top_right: top,
+            bottom_left: bottom.clone(),
+            bottom_right: bottom,
+        }
+    }
+}
+
+pub struct LRTB<T>
+{
+    pub left: T,
+    pub right: T,
+    pub top: T,
+    pub bottom: T,
+}
+
+impl<T> LRTB<T> {
+    pub fn new(left: T, right: T, top: T, bottom: T) -> Self {
+        Self {
+            left,
+            right,
+            top,
+            bottom,
+        }
+    }
+
+    pub fn new_same(value: T) -> Self
+    where
+        T: Clone,
+    {
+        Self {
+            left: value.clone(),
+            right: value.clone(),
+            top: value.clone(),
+            bottom: value,
+        }
+    }
+
+    pub fn new_cross(left_right: T, top_bottom: T) -> Self
+    where
+        T: Clone,
+    {
+        Self {
+            left: left_right.clone(),
+            right: left_right,
+            top: top_bottom.clone(),
+            bottom: top_bottom,
+        }
+    }
+}
+
+impl<T> From<LRTB<T>> for Rect<T> {
+    fn from(lrtb: LRTB<T>) -> Self {
+        Rect::new(Vector2::new(lrtb.left, lrtb.top), Vector2::new(lrtb.right, lrtb.bottom))
+    }
+}
+
 /// This is a rectangle with a min and max point.
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy)]
 pub struct Rect<T>
-where
-    T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + PartialOrd,
 {
     pub min: Vector2<T>,
     pub max: Vector2<T>,
+}
+
+impl<T> PartialEq for Rect<T>
+where
+    T: PartialEq,
+{
+    fn eq(&self, other: &Self) -> bool {
+        self.min[0] == other.min[0] &&
+        self.min[1] == other.min[1] &&
+        self.max[0] == other.max[0] &&
+        self.max[1] == other.max[1]
+    }
+}
+
+impl<T> Rect<T> {
+    /// Creates a new rectangle from a min and max point.
+    /// The min and max points are not checked for validity.
+    pub fn new(min: Vector2<T>, max: Vector2<T>) -> Rect<T> {
+        return Rect { min: min, max: max };
+    }
 }
 
 impl<T> Rect<T>
 where
     T: na::Scalar + Copy + Sub<Output = T> + Add<Output = T> + AddAssign + SubAssign + PartialOrd,
 {
-    /// Creates a new rectangle from a min and max point.
-    /// The min and max points are not checked for validity.
-    pub fn new(min: Vector2<T>, max: Vector2<T>) -> Rect<T> {
-        return Rect { min: min, max: max };
-    }
-
     /// Creates a new rectangle from a min and max point.
     /// The min and max points are inverted if necessary.
     pub fn new_checked(min: Vector2<T>, max: Vector2<T>) -> Rect<T> {

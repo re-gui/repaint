@@ -1,34 +1,32 @@
-use std::cell::RefCell;
 
-use painter::{SkiaContext, SkiaPainter};
+pub use painter::{SkiaPainter};
 use repaint::{Canvas, base::defs::rect::F64Rect, nalgebra::Vector2};
 use skia_safe::Surface;
 
 mod painter;
 
-// TODO move
-pub fn make_skia_context() -> SkiaContext {
-    SkiaContext::new()
-}
+pub use skia_safe;
 
-pub struct SkiaCanvas<'surface, 'context: 'surface>
+pub struct SkiaCanvas<'canvas>
 {
-    surface: &'surface mut Surface,
-    _context: &'context RefCell<SkiaContext>,
+    skia_canvas: &'canvas mut skia_safe::Canvas,
+    width: f64,
+    height: f64,
 }
 
-impl<'surface, 'context> SkiaCanvas<'surface, 'context> {
-    pub fn new(surface: &'surface mut Surface, context: &'context RefCell<SkiaContext>) -> Self {
+impl<'canvas> SkiaCanvas<'canvas> {
+    pub fn new(skia_canvas: &'canvas mut skia_safe::Canvas, width: f64, height: f64) -> Self {
         Self {
-            surface,
-            _context: context,
+            skia_canvas,
+            width,
+            height,
         }
     }
 }
 
-impl<'surface, 'context: 'surface> Canvas<'context> for SkiaCanvas<'surface, 'context> {
+impl<'canvas> Canvas for SkiaCanvas<'canvas> {
     type Shape = F64Rect;
-    type Painter<'canvas> = SkiaPainter<'canvas, 'surface, 'context> where Self: 'canvas;
+    type Painter<'s> = SkiaPainter<'s, 'canvas> where 'canvas: 's;
 
     fn painter<'s>(&'s mut self) -> Result<Self::Painter<'s>, repaint::canvas::GetPainterError> {
         Ok(SkiaPainter::new(self))
@@ -37,7 +35,7 @@ impl<'surface, 'context: 'surface> Canvas<'context> for SkiaCanvas<'surface, 'co
     fn shape(&self) -> Self::Shape {
         F64Rect::new(
             Vector2::new(0.0, 0.0),
-            Vector2::new(self.surface.width() as f64, self.surface.height() as f64)
+            Vector2::new(self.width, self.height),
         )
     }
 

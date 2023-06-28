@@ -17,10 +17,11 @@ use crate::{painter::BasicPainter, base::shapes::Shape};
 /// An object that can be drawn on.
 /// 
 /// The canvas provides a painter that can be used to draw on it, see the [repaint architecture](crate#architecture) for more details on how this works conceptually.
-pub trait Canvas<'context> { // TODO meybe remove the lifetime and make the canvas to create a pair (context, painter) instead of just painter?
+pub trait Canvas {
     type Shape: Shape;
 
-    type Painter<'canvas>: BasicPainter<'context> where Self: 'canvas;
+    //type Painter<'canvas>: BasicPainter where Self: 'canvas;
+    type Painter<'s>: BasicPainter where Self: 's;
 
     /// Returns a [`Painter`] that can be used to paint on the canvas.
     /// 

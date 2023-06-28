@@ -1,30 +1,8 @@
 
-use repaint::{BasicPainter, base::{shapes::{path::PathCommand, Shape, BasicShape}, defs::{colors::default_color_types::RgbaFColor, linalg::Vec2f64}, paint::{Paint, Ink}, pen::Pen, blending::BlendMode, transform::Transform2d}, nalgebra::Matrix4, SaveLayerRec, methods::{TransformError, ClipError, PaintStyle}, ClipOperation, WithPathResource, Context, WithText, FontStyle, FontWeight, FontWidth, FontSlant, PointMode, Canvas, RasterPainter, LocalizedString, FontVariationParameter, FontVariationAxisTag, FontVariationAxis};
+use repaint::{BasicPainter, base::{shapes::{path::PathCommand, Shape, BasicShape}, defs::{colors::default_color_types::RgbaFColor, linalg::Vec2f64}, paint::{Paint, Ink}, pen::Pen, blending::BlendMode, transform::Transform2d}, nalgebra::Matrix4, SaveLayerRec, methods::{TransformError, ClipError, PaintStyle}, ClipOperation, WithPathResource, WithText, FontStyle, FontWeight, FontWidth, FontSlant, PointMode, Canvas, RasterPainter, LocalizedString, FontVariationParameter, FontVariationAxisTag, FontVariationAxis};
 use skia_safe::{font_arguments::VariationPosition, FourByteTag};
 
 use crate::{SkiaCanvas, conversions::{create_skia_path, paint_style_to_skia_paint, color_to_skia_color}, IntoSkiaCorrespondingType};
-
-
-
-
-pub struct SkiaContext {
-}
-
-impl SkiaContext{
-    pub fn new() -> Self {
-        Self {
-        }
-    }
-}
-
-impl Context for SkiaContext {
-    //fn make_path(&mut self, path_iter: &mut dyn Iterator<Item = PathCommand>) -> Result<PathResource<'context>, ()> { // TODO proper error
-    //    Ok(PathResource(PainterResource::new(
-    //        Rc::new(create_skia_path(path_iter)),
-    //        self.lifecycle()
-    //    )))
-    //}
-}
 
 struct Buffers {
     points: Vec<skia_safe::Point>,
@@ -38,14 +16,14 @@ impl Buffers {
     }
 }
 
-pub struct SkiaPainter<'canvas, 'surface, 'context> {
-    canvas: &'canvas mut SkiaCanvas<'surface, 'context>,
+pub struct SkiaPainter<'c, 'canvas> {
+    canvas: &'c mut SkiaCanvas<'canvas>,
     buffers: Buffers,
     font_namager: FontManager,
 }
 
-impl<'canvas, 'surface, 'context> SkiaPainter<'canvas, 'surface, 'context> {
-    pub fn new(canvas: &'canvas mut SkiaCanvas<'surface, 'context>) -> Self {
+impl<'c, 'canvas> SkiaPainter<'c, 'canvas> {
+    pub fn new(canvas: &'c mut SkiaCanvas<'canvas>) -> Self {
         Self {
             canvas,
             buffers: Buffers::new(),
@@ -56,17 +34,20 @@ impl<'canvas, 'surface, 'context> SkiaPainter<'canvas, 'surface, 'context> {
     /// The underlying Skia canvas.
     /// **Waring**: This method exposes the underlying Skia canvas allowing
     /// the user to perform. Use with care (especially with `save`/`restore`).
-    pub fn skia_canvas_mut(&mut self) -> &mut skia_safe::Canvas {
-        self.canvas.surface.canvas()
+    pub unsafe fn skia_canvas_mut(&mut self) -> &mut skia_safe::Canvas {
+        self.canvas.skia_canvas
+    }
+
+    fn skia_canvas_mut_priv(&mut self) -> &mut skia_safe::Canvas {
+        self.canvas.skia_canvas
     }
 }
 
-impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas, 'surface, 'context> {
+impl<'c, 'canvas> BasicPainter for SkiaPainter<'c, 'canvas> {
     type NativeColor = RgbaFColor;
 
     //type Resources = SkiaResources;
-    type Canvas = SkiaCanvas<'surface, 'context>;
-    type Context = SkiaContext;
+    type Canvas = SkiaCanvas<'canvas>;
 
     fn canvas(&self) -> &Self::Canvas {
         self.canvas
@@ -80,9 +61,9 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
         &'a mut self,
         paint: impl FnOnce(&mut Self) -> R,
     ) -> R {
-        self.skia_canvas_mut().save();
+        self.skia_canvas_mut_priv().save();
         let r = paint(self);
-        self.skia_canvas_mut().restore();
+        self.skia_canvas_mut_priv().restore();
         r
     }
 
@@ -103,9 +84,9 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
             skia_layer_rec = skia_layer_rec.bounds(&rect);
         }
         // TODO ...
-        self.skia_canvas_mut().save_layer(&skia_layer_rec);
+        self.skia_canvas_mut_priv().save_layer(&skia_layer_rec);
         let r = paint(self);
-        self.skia_canvas_mut().restore();
+        self.skia_canvas_mut_priv().restore();
         r
     }
 
@@ -125,7 +106,7 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
             return Err(TransformError::Unsupported);
         };
 
-        self.skia_canvas_mut().set_matrix(&matrix);
+        self.skia_canvas_mut_priv().set_matrix(&matrix);
         Ok(())
     }
 
@@ -144,7 +125,7 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
         };
 
         // TODO use when possible self.skia_canvas_mut().concat(matrix)
-        self.skia_canvas_mut().concat_44(&matrix);
+        self.skia_canvas_mut_priv().concat_44(&matrix);
         Ok(())
     }
 
@@ -158,7 +139,7 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
         if let Some(basic) = shape.to_basic_shape() {
             match basic {
                 BasicShape::Rect(rect) => {
-                    self.skia_canvas_mut().clip_rect(
+                    self.skia_canvas_mut_priv().clip_rect(
                         skia_safe::Rect::new(
                             rect.min.x as f32,
                             rect.min.y as f32,
@@ -175,7 +156,7 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
             }
         }
         let path = create_skia_path(shape.to_path_iter());
-        self.skia_canvas_mut().clip_path(&path, op, true);
+        self.skia_canvas_mut_priv().clip_path(&path, op, true);
         Ok(())
     }
 
@@ -184,7 +165,7 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
         pos: Vec2f64,
         style: PaintStyle<Self::NativeColor>,
     ) {
-        self.skia_canvas_mut().draw_point(
+        self.skia_canvas_mut_priv().draw_point(
             (pos.x as f32, pos.y as f32),
             &paint_style_to_skia_paint(&style),
         );
@@ -206,7 +187,7 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
             PointMode::Lines => skia_safe::canvas::PointMode::Lines,
             PointMode::Polygon => skia_safe::canvas::PointMode::Polygon,
         };
-        self.canvas.surface.canvas().draw_points(
+        self.canvas.skia_canvas.draw_points(
             point_mode,
             &self.buffers.points,
             &paint_style_to_skia_paint(&style)
@@ -220,7 +201,7 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
         end: Vec2f64,
         pen: Pen<Self::NativeColor>,
     ) {
-        self.canvas.surface.canvas().draw_line(
+        self.canvas.skia_canvas.draw_line(
             (start.x as f32, start.y as f32),
             (end.x as f32, end.y as f32),
             &paint_style_to_skia_paint(&PaintStyle::Stroke(pen))
@@ -234,14 +215,14 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
     ) {
         let path = create_skia_path(path_iter);
         let paint = paint_style_to_skia_paint(&style);
-        self.canvas.surface.canvas().draw_path(path.as_ref(), &paint);
+        self.canvas.skia_canvas.draw_path(path.as_ref(), &paint);
     }
 
     fn clear(
         &mut self,
         color: Self::NativeColor,
     ) {
-        self.canvas.surface.canvas().clear(color_to_skia_color(color));
+        self.canvas.skia_canvas.clear(color_to_skia_color(color));
     }
 
     fn fill_with(
@@ -249,7 +230,7 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
         paint: &Paint<Self::NativeColor>,
     ) {
         let rect = self.canvas.shape().into_skia();
-        self.skia_canvas_mut().draw_rect(
+        self.skia_canvas_mut_priv().draw_rect(
             rect,
             &paint_style_to_skia_paint(&PaintStyle::Fill(paint.clone())),
         );
@@ -257,7 +238,7 @@ impl<'canvas, 'surface, 'context> BasicPainter<'context> for SkiaPainter<'canvas
     }
 }
 
-impl<'canvas, 'surface, 'context> RasterPainter<'context> for SkiaPainter<'canvas, 'surface, 'context> {
+impl<'c, 'canvas> RasterPainter for SkiaPainter<'c, 'canvas> {
     fn has_antialias(&self) -> bool {
         true
     }
@@ -271,7 +252,7 @@ impl<'canvas, 'surface, 'context> RasterPainter<'context> for SkiaPainter<'canva
     }
 }
 
-impl<'canvas, 'surface, 'context> WithPathResource<'context> for SkiaPainter<'canvas, 'surface, 'context> {
+impl<'c, 'canvas> WithPathResource for SkiaPainter<'c, 'canvas> {
     type Path = skia_safe::Path; // TODO ??
 
     fn make_path(
@@ -284,7 +265,7 @@ impl<'canvas, 'surface, 'context> WithPathResource<'context> for SkiaPainter<'ca
 
     fn path(&mut self, path: &Self::Path, style: PaintStyle<Self::NativeColor>) {
         let paint = paint_style_to_skia_paint(&style);
-        self.canvas.surface.canvas().draw_path(path.as_ref(), &paint);
+        self.canvas.skia_canvas.draw_path(path.as_ref(), &paint);
     }
 }
 
@@ -384,7 +365,7 @@ impl repaint::FontManager for FontManager {
     }
 }
 
-impl<'canvas, 'surface, 'context> WithText<'context> for SkiaPainter<'canvas, 'surface, 'context> {
+impl<'c, 'canvas> WithText for SkiaPainter<'c, 'canvas> {
     type Typeface = Typeface;
     type Font = Font;
     type TextBlob = TextBlob;
@@ -420,7 +401,7 @@ impl<'canvas, 'surface, 'context> WithText<'context> for SkiaPainter<'canvas, 's
 
     fn draw_text_blob(&mut self, text_blob: &Self::TextBlob, pos: Vec2f64, style: PaintStyle<Self::NativeColor>) {
         let paint = paint_style_to_skia_paint(&style);
-        self.canvas.surface.canvas().draw_text_blob(text_blob.0.as_ref(), (pos.x as f32, pos.y as f32), &paint);
+        self.canvas.skia_canvas.draw_text_blob(text_blob.0.as_ref(), (pos.x as f32, pos.y as f32), &paint);
     }
 }
 

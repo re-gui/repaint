@@ -7,4 +7,4 @@ edition = "2021"
 
 [dependencies]
 repaint = { version = "0.1.0", path = "../../repaint" }
-skia-safe = "0.62.0"
+skia-safe = "0.63.0"

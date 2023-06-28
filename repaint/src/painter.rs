@@ -14,10 +14,7 @@ use methods::*;
 pub use text::*;
 use strum::EnumIter;
 
-use crate::{Canvas, base::{shapes::{path::{PathCommand}, Shape}, transform::Transform2d, defs::{linalg::Vec2f64, rect::F64Rect, colors::{ColorType}}, paint::{Ink, Paint}, pen::Pen, blending::BlendMode, brush::Brush}};
-
-pub trait Context {
-}
+use crate::{Canvas, base::{shapes::{path::{PathCommand}, Shape}, transform::Transform2d, defs::{linalg::Vec2f64, rect::F64Rect, colors::{ColorType}}, paint::{Ink, Paint}, pen::Pen, blending::BlendMode}};
 
 // TODO move?
 #[derive(Debug, Clone)] // TODO see https://api.skia.org/classSkCanvas.html#a06bd76ce35082366bb6b8e6dfcb6f435
@@ -46,7 +43,7 @@ pub enum PointMode {
 ///  * Although a [`BasicPainter`] is just a trait, it is conceptually useful to keep in mind
 ///    that painters are not meant to be isolated objects, but they should exist in relation
 ///    to some [`Canvas`] they *paint* on.
-pub trait BasicPainter<'context> {
+pub trait BasicPainter {
     /// The prefferred color type of the painter.
     ///
     /// This is the preferred color type to be used with this painter as this is likely to
@@ -55,10 +52,7 @@ pub trait BasicPainter<'context> {
     type NativeColor: ColorType;
 
     /// The canvas type associated with this painter.
-    type Canvas: Canvas<'context>;
-
-    /// The context type associated with this painter.
-    type Context: Context;
+    type Canvas: Canvas;
 
     /// Get the canvas that this painter is drawing to.
     ///
@@ -154,7 +148,6 @@ pub trait BasicPainter<'context> {
         rect: F64Rect,
         style: PaintStyle<Self::NativeColor>,
     ) {
-        println!("rect: {:?}", rect);
         self.draw_path_iter(
             &mut rect_to_path(rect).iter().cloned(),
             style,
@@ -164,7 +157,7 @@ pub trait BasicPainter<'context> {
     // TODO ...
 }
 
-pub trait RasterPainter<'context>: BasicPainter<'context> {
+pub trait RasterPainter: BasicPainter {
     /// Returns whether this painter supports antialiasing.
     fn has_antialias(&self) -> bool;
 
@@ -177,7 +170,7 @@ pub trait RasterPainter<'context>: BasicPainter<'context> {
     // TODO other methods to efficiently draw pixels
 }
 
-pub trait WithPathResource<'context>: BasicPainter<'context> {
+pub trait WithPathResource: BasicPainter {
     type Path; // TODO bounds
 
     fn make_path(
@@ -187,17 +180,17 @@ pub trait WithPathResource<'context>: BasicPainter<'context> {
 
     fn path(&mut self, path: &Self::Path, style: PaintStyle<Self::NativeColor>);
 
-    fn sweep(
-        &mut self,
-        path: &Self::Path,
-        brush: &impl Brush<'context, Self>,
-    ) {
-        brush.sweep(self, path);
-    }
+    //fn sweep(
+    //    &mut self,
+    //    path: &Self::Path,
+    //    brush: &impl Brush<'context, Self>,
+    //) {
+    //    brush.sweep(self, path);
+    //}
 }
 
-pub trait Painter<'context>: BasicPainter<'context> + WithPathResource<'context> + WithText<'context> {}
+pub trait Painter: BasicPainter + WithPathResource + WithText {}
 
-impl<'context, T> Painter<'context> for T where T: BasicPainter<'context> + WithPathResource<'context> + WithText<'context> {}
+impl<T> Painter for T where T: BasicPainter + WithPathResource + WithText {}
 
 //pub struct PainterResourceAccessor<'painter>(&'painter dyn Painter); // TODO dyn meybe unnecessary
