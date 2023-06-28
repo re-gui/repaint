@@ -96,7 +96,7 @@ impl<'c, 'canvas> BasicPainter for SkiaPainter<'c, 'canvas> {
         let matrix: M44 = if let Some(mat) = transform.to_mat4x4() {
             let mat: Matrix4<f32> = mat.cast();
             let s = mat.as_slice();
-            M44::row_major(&[
+            M44::col_major(&[ // This was row_major, but it seems to be col_major... I don't know why <- looks like nalgebra stores column major: see https://docs.rs/nalgebra/0.32.2/src/nalgebra/base/array_storage.rs.html#43
                 s[0], s[1], s[2], s[3],
                 s[4], s[5], s[6], s[7],
                 s[8], s[9], s[10], s[11],
